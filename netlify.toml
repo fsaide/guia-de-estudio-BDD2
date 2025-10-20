@@ -1,0 +1,18 @@
+# Archivo: netlify.toml
+
+[build]
+  # Netlify detecta automáticamente Go en 'netlify/functions'
+  # pero especificarlo aquí es una buena práctica.
+  functions = "netlify/functions"
+
+# Esta es la regla mágica:
+[[redirects]]
+  # Toma cualquier petición que llegue a tu sitio...
+  from = "/*"
+  # ...y envíala a tu función 'server' de Go.
+  to = "/.netlify/functions/server"
+  # Usa un estado 200 (rewrite) para que la URL no cambie en el navegador.
+  status = 200
+  # 'force = true' asegura que esto se aplique incluso si
+  # existen archivos estáticos (como un index.html).
+  force = true
