@@ -5,6 +5,9 @@
   # pero especificarlo aquí es una buena práctica.
   functions = "netlify/functions"
 
+[build.environment]
+  GO_VERSION = "1.22"
+
 # Esta es la regla mágica:
 [[redirects]]
   # Toma cualquier petición que llegue a tu sitio...
