@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 3: Vistas - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link">1. SQL</a>
+            <a href="/module2" class="nav-link">2. Restricciones</a>
+            <a href="/module3" class="nav-link active">3. Vistas</a>
+            <a href="/module4" class="nav-link">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link">5. Optimización</a>
+            <a href="/module6" class="nav-link">6. Seguridad</a>
+        </nav>
+    </div>
+    
+    <h2>Módulo 3: Vistas 🖼️</h2>
+
+    <div class="module-content">
+        <p>Una <strong>vista</strong> es una tabla virtual cuyo contenido está definido por una consulta <code>SELECT</code> almacenada. No almacena datos por sí misma (a menos que sea una vista materializada), sino que muestra dinámicamente los datos de las tablas base subyacentes cada vez que se consulta.</p>
+        
+        <h4>Ventajas y Creación</h4>
+        <ul>
+            <li><strong>Ventajas Principales</strong>:
+                <ul>
+                    <li><strong>Simplificación</strong>: Ocultan la complejidad de consultas que involucran múltiples tablas o cálculos complejos, presentando una interfaz más simple a los usuarios.</li>
+                    <li><strong>Seguridad</strong>: Permiten restringir el acceso a datos sensibles ocultando columnas específicas o filtrando filas según ciertos criterios. Los permisos (<code>GRANT</code>/<code>REVOKE</code>) se pueden aplicar directamente sobre las vistas.</li>
+                    <li><strong>Independencia Lógica</strong>: La estructura de las tablas base puede modificarse (hasta cierto punto) sin afectar a las aplicaciones o usuarios que acceden a los datos a través de vistas, siempre que la interfaz de la vista se mantenga.</li>
+                </ul>
+            </li>
+            <li><strong>Creación</strong>:
+                <p>Se utiliza la sentencia <code>CREATE VIEW</code>:</p>
+                <code>CREATE [OR REPLACE] VIEW nombre_vista [(col1, col2, ...)] AS consulta_select [WITH [CASCADED | LOCAL] CHECK OPTION];</code>
+                <ul>
+                    <li><code>OR REPLACE</code>: Permite modificar una vista existente sin necesidad de eliminarla primero.</li>
+                    <li><code>(col1, col2, ...)</code>: Opcionalmente, permite renombrar las columnas resultantes de la consulta. Es obligatorio si hay columnas duplicadas o calculadas sin alias en la consulta.</li>
+                    <li><code>consulta_select</code>: Cualquier consulta <code>SELECT</code> válida que define el contenido de la vista. Puede basarse en una o más tablas, o incluso en otras vistas.</li>
+                    <li><code>WITH CHECK OPTION</code>: Se explica más adelante, previene la "migración de tuplas".</li>
+                </ul>
+            </li>
+             <li><strong>Eliminación</strong>:
+                 <code>DROP VIEW nombre_vista [CASCADE | RESTRICT];</code>
+                 <ul>
+                    <li><code>CASCADE</code>: Elimina la vista y cualquier objeto dependiente de ella (como otras vistas).</li>
+                    <li><code>RESTRICT</code> (por defecto): Rechaza la eliminación si otros objetos dependen de la vista.</li>
+                 </ul>
+            </li>
+        </ul>
+
+        <h4>Vistas Actualizables</h4>
+        <p>Realizar operaciones DML (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) directamente sobre una vista no siempre es posible. Para que una vista sea <strong>automáticamente actualizable</strong>, el SGBD debe poder mapear inequívocamente la operación sobre la vista a una operación sobre una única tabla base subyacente.</p>
+        <ul>
+            <li><strong>Condiciones Generales (Estándar SQL)</strong> : Una vista sobre una tabla es actualizable si, entre otras cosas: no usa <code>DISTINCT</code> , no usa funciones de agregación , no usa <code>GROUP BY</code>, e incluye todas las columnas <code>NOT NULL</code> sin valor por defecto de la tabla base (o al menos las que no se provean en el `INSERT`). Para vistas con `JOIN`, la actualización solo suele permitirse sobre la tabla que "preserva la clave".</li>
+            <li><strong>Condiciones Específicas en PostgreSQL</strong>: PostgreSQL es más restrictivo. Una vista es automáticamente actualizable si:
+                <ul>
+                    <li>Tiene exactamente <strong>una entrada en la cláusula <code>FROM</code></strong> (que debe ser una tabla o una vista actualizable).</li>
+                    <li>El <code>SELECT</code> de nivel superior <strong>no contiene</strong>: <code>WITH</code>, <code>DISTINCT</code>, <code>GROUP BY</code>, <code>HAVING</code>, <code>LIMIT</code>, <code>OFFSET</code>, operaciones de conjunto (<code>UNION</code>, <code>INTERSECT</code>, <code>EXCEPT</code>), funciones de agregación, funciones de ventana, o funciones que retornen conjuntos.</li>
+                </ul>
+                 <p>Las columnas calculadas en una vista actualizable son de solo lectura.</p>
+            </li>
+            <li><strong>Migración de Tuplas y <code>WITH CHECK OPTION</code></strong> : Si se actualiza una fila a través de una vista de tal manera que ya no cumple la condición <code>WHERE</code> de la vista, esa fila "desaparece" de la vista (aunque sigue existiendo en la tabla base). Para evitar esto, se usa <code>WITH CHECK OPTION</code>. Esta cláusula hace que el SGBD rechace cualquier <code>INSERT</code> o <code>UPDATE</code> que resulte en una fila que no satisfaga la condición <code>WHERE</code> de la vista.
+                <ul>
+                    <li><code>CASCADED</code> (por defecto): Comprueba la condición de la vista actual y de todas las vistas subyacentes.</li>
+                    <li><code>LOCAL</code>: Comprueba la condición de la vista actual y solo de las vistas subyacentes que también tengan <code>WITH CHECK OPTION</code>.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Vistas Materializadas</h4>
+        <p>A diferencia de las vistas estándar, una <strong>vista materializada</strong> almacena físicamente el resultado de su consulta, como si fuera una tabla real. Se crean principalmente por razones de <strong>rendimiento</strong>.</p>
+        <ul>
+            <li><strong>Ventajas</strong>: Consultar una vista materializada es mucho más rápido que ejecutar la consulta compleja subyacente cada vez, especialmente si la consulta es costosa (joins complejos, agregaciones sobre muchas filas). Se pueden crear índices sobre ellas.</li>
+            <li><strong>Desventajas</strong>: Los datos almacenados pueden quedar <strong>desactualizados</strong> respecto a las tablas base. Requieren un mecanismo para <strong>refrescar</strong> (actualizar) su contenido, lo cual consume recursos. El refresco puede ser completo (recalcular todo) o incremental, y puede hacerse manualmente o de forma programada.</li>
+            <li><strong>Uso</strong>: Comunes en almacenes de datos (Data Warehouses) y aplicaciones de Business Intelligence (BI) para precalcular sumarios y agregaciones.</li>
+        </ul>
+                
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>Solución a Vistas no Actualizables: <code>INSTEAD OF</code> Triggers</strong> </p>
+            <p>Cuando una vista es compleja (ej: con `JOINs`, agregaciones, etc.) y no es actualizable automáticamente según las reglas del SGBD, puedes definir un trigger de tipo <code>INSTEAD OF</code> sobre ella. Este trigger intercepta la operación DML (<code>INSERT</code>, <code>UPDATE</code> o <code>DELETE</code>) dirigida a la vista y, en lugar de ejecutar la operación (que fallaría), ejecuta el código que tú definas dentro del trigger. Esto te da control total para describir manually cómo se deben modificar las tablas base subyacentes para reflejar la operación deseada sobre la vista. Es una forma potente pero compleja de dotar de comportamiento de actualización a vistas que de otro modo serían de solo lectura.</p>
+            <p><strong>Vistas y Seguridad a Nivel de Fila (Row-Level Security - RLS)</strong></p>
+            <p>Aunque las vistas pueden filtrar filas usando `WHERE`, una técnica más avanzada y flexible para la seguridad a nivel de fila es RLS (soportada por SGBD modernos como PostgreSQL). RLS permite definir políticas de seguridad directamente en las tablas, que filtran automáticamente las filas visibles o modificables basándose en el usuario actual o su rol, sin necesidad de crear múltiples vistas. Sin embargo, las vistas siguen siendo útiles para seguridad a nivel de columna o para simplificar accesos.</p>
+        </div>
+        <div class="link-container">
+            <a href="/module2" class="btn">&larr;</a>
+            <a href="/quiz?module=3" target="_blank" class="btn">Quiz del Módulo 3</a>
+            <a href="/practice3" target="_blank" class="btn">Practica del Módulo 3</a>
+            <a href="/module4" class="btn">&rarr;</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

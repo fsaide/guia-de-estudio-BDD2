@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 2</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+    <div class="container">
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link">practico 1</a>
+            <a href="/practice2" class="nav-link active">practico 2</a>
+            <a href="/practice3" class="nav-link">practico 3</a>
+            <a href="/practice4" class="nav-link">practico 4</a>
+            <a href="/practice5" class="nav-link">practico 5</a>
+            <a href="/practice6" class="nav-link">practico 6</a>
+        </nav>
+        </div>
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 2</h1>
+        </div>
+        
+        <h2>Restricciones de Integridad Declarativas</h2>
+        
+        <h3>Restricciones de Integridad Referencial</h3>
+
+        <h3>Ejercicio 1</h3>
+        <p>Considere el siguiente esquema de una base de datos de un centro de servicios, sus Restricciones de Integridad Referencial (RIR) y las acciones referenciales asociadas, que se indican a continuación:</p>
+        
+        <p>a) Provea las sentencias declarativas completas en PostgreSQL que permitan incorporar las restricciones de integridad faltantes en <a href="https://drive.google.com/file/d/1RzLH3J5KkKdAW9WkfJaWv1q7JLFtxZrR/view?usp=sharing" target="_blank" class="link-especial">este script</a>.</p>
+        
+        <p>b) Tenga en cuenta que las tablas se encuentran instanciadas con la siguiente información:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th colspan="4">CLIENTE</th></tr>
+                    <tr>
+                        <th>Zona</th>
+                        <th>NroC</th>
+                        <th>Apell_nombre</th>
+                        <th>Ciudad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A</td>
+                        <td>1</td>
+                        <td>Ro, Juan</td>
+                        <td>C1</td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>2</td>
+                        <td>Efe, Alberto</td>
+                        <td>C1</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>1</td>
+                        <td>Hache, Lucía</td>
+                        <td>C1</td>
+                    </tr>
+                    <tr>
+                        <td>C</td>
+                        <td>2</td>
+                        <td>Ges, María</td>
+                        <td>C3</td>
+                    </tr>
+                    <tr>
+                        <td>D</td>
+                        <td>3</td>
+                        <td>Ene, Luis</td>
+                        <td>C2</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <table>
+                <thead>
+                    <tr><th colspan="5">SERVICIO</th></tr>
+                    <tr>
+                        <th>IdServ</th>
+                        <th>nombreServ</th>
+                        <th>anio_comienzo</th>
+                        <th>anio_fin</th>
+                        <th>tipoServ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>11</td>
+                        <td>Serv 1</td>
+                        <td>2020</td>
+                        <td>2024</td>
+                        <td>T</td>
+                    </tr>
+                    <tr>
+                        <td>22</td>
+                        <td>Serv 2</td>
+                        <td>2022</td>
+                        <td>2025</td>
+                        <td>T</td>
+                    </tr>
+                    <tr>
+                        <td>33</td>
+                        <td>Serv 3</td>
+                        <td>2024</td>
+                        <td>null</td>
+                        <td>P</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="6">INSTALACION</th></tr>
+                    <tr>
+                        <th>Zona</th>
+                        <th>NroC</th>
+                        <th>IdServ</th>
+                        <th>fecha_instalacion</th>
+                        <th>CantHoras</th>
+                        <th>Tarea</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>A</td>
+                        <td>1</td>
+                        <td>11</td>
+                        <td>2025-07-01</td>
+                        <td>5</td>
+                        <td>T1</td>
+                    </tr>
+                    <tr>
+                        <td>B</td>
+                        <td>1</td>
+                        <td>22</td>
+                        <td>2025-07-20</td>
+                        <td>7</td>
+                        <td>T1</td>
+                    </tr>
+                    <tr>
+                        <td>C</td>
+                        <td>2</td>
+                        <td>11</td>
+                        <td>2025-07-31</td>
+                        <td>9</td>
+                        <td>T2</td>
+                    </tr>
+                    <tr>
+                        <td>A</td>
+                        <td>2</td>
+                        <td>33</td>
+                        <td>2025-08-10</td>
+                        <td>6</td>
+                        <td>T2</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr><th colspan="4">REFERENCIA</th></tr>
+                    <tr>
+                        <th>IdServ</th>
+                        <th>Motivo</th>
+                        <th>Zona</th>
+                        <th>NroC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>11</td>
+                        <td>Puntualidad</td>
+                        <td>D</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>22</td>
+                        <td>Calidad</td>
+                        <td>C</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>33</td>
+                        <td>Costo</td>
+                        <td>C</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Atención</td>
+                        <td>D</td>
+                        <td>3</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div> <p>Muestre el resultado para cada una de las siguientes operaciones, considerando que se ejecutan sobre la instancia original (sus resultados no son acumulables). Justifique.</p>
+        <ol style="list-style-type: lower-roman;">
+            <li><pre><code>delete from Cliente where NroC = 1;</code></pre></li>
+            <li><pre><code>delete from Cliente where Zona = 'C';</code></pre></li>
+            <li><pre><code>update Instalacion set IdServ = 55 where IdServ = 22;</code></pre></li>
+            <li><pre><code>update Cliente set Zona = 'Z' where Zona = 'C';</code></pre></li>
+        </ol>
+
+        <p>c) Indique cuáles de las siguientes operaciones serían aceptadas/rechazadas por el DBMS, seg&uacute;n se considere match: i) simple, ii) parcial, o iii) full para la RIR R4:</p>
+        <ol style="list-style-type: lower-roman;">
+            <li><pre><code>insert into Referencia values (11, 'Costo', 'B', null);</code></pre></li>
+            <li><pre><code>insert into Referencia values (22, 'Reclamo', null, null);</code></pre></li>
+            <li><pre><code>insert into Referencia values (33, 'Calidad', 'A', 3);</code></pre></li>
+            <li><pre><code>update Referencia set zona = null where NroC = 3;</code></pre></li>
+            <li><pre><code>update Referencia set zona = null, NroC = null where idServ = 22;</code></pre></li>
+            <li><pre><code>update Referencia set zona = 'H', NroC = null where idServ = 33;</code></pre></li>
+        </ol>
+
+        <hr>
+
+        <h3>Otras Restricciones Declarativas</h3>
+        <p>Para los siguientes ejercicios, seg&uacute;n el esquema de BD que se indique:</p>
+        <ul>
+            <li>Complete la siguiente TABLA DE RESTRICCIONES, determinando para cada restricción:
+                <ul>
+                    <li>la/s tabla/s y atributo/s afectados en cada caso</li>
+                    <li>el tipo de restricción, seg&uacute;n el recurso declarativo m&aacute;s restrictivo requerido para implementarla seg&uacute;n SQL est&aacute;ndar: <i>de dominio o atributo, de tupla, de tabla o general</i>.</li>
+                </ul>
+            </li>
+            <li>Plantee la/s sentencia/s en SQL est&aacute;ndar para realizar cada uno de los controles solicitados (<i>ALTER TABLE o CREATE ASSERTION</i>). Indique cu&aacute;les pueden ser soportadas en PostgreSQL.</li>
+        </ul>
+
+        <p style="text-align:center; font-weight: bold; margin-top: 20px;">TABLA DE RESTRICCIONES</p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restricción</th>
+                        <th>Tabla/s</th>
+                        <th>Atributo/s</th>
+                        <th>Tipo de restricción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2.a</td>
+                        <td>ARTICULO</td>
+                        <td>Nacionalidad</td>
+                        <td>De atributo</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>....</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Ejercicio 2</h3>
+        <p>Para el <i>esquema de Articulos</i>: </p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Controlar que las nacionalidades sean 'Argentina', 'Española' o 'Inglesa'.</li>
+            <li>Para las fechas de publicaciones se debe considerar que sean fechas posteriores o iguales al 2010.</li>
+            <li>Los artículos publicados luego del año 2020 no deben ser de nacionalidad Inglesa.</li>
+            <li>Sólo se pueden publicar artículos argentinos que contengan hasta 10 palabras claves.</li>
+        </ol>
+
+        <h3>Ejercicio 3</h3>
+        <p>Para el <i>esquema de Proveedores</i>: </p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Cada proveedor puede proveer hasta 20 productos a una misma sucursal.</li>
+            <li>Los nombres de sucursales de Tandil deben comenzar con T.</li>
+            <li>La descripción y la presentación de un producto no pueden ser ambas nulas.</li>
+            <li>Cada proveedor sólo puede proveer productos a sucursales de su misma localidad.</li>
+        </ol>
+
+        <h3>Ejercicio 4</h3>
+        <p>Para el esquema de <i>Voluntarios</i> del TP 1: </p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Ningún voluntario puede aportar más horas que las de su coordinador.</li>
+            <li>Las horas aportadas por un voluntario deben estar dentro de los valores máximos y mí­nimos consignados en la tarea que realiza.</li>
+            <li>Todos los voluntarios deben realizar la misma tarea que su coordinador.</li>
+            <li>Los voluntarios no pueden cambiar de institución más de tres veces en un año.</li>
+        </ol>
+
+        <div class="schema-buttons">
+            <a href="/practice1" class="btn">&larr;</a>
+            <a href="/module2" target="_blank" class="btn">Teoria del Módulo 2</a>
+            <a href="/static/RIR_servicio.png" target="_blank" class="btn">Ver RIR proovedores</a>
+            <a href="/static/esq_pelicula.png" target="_blank" class="btn">Ver Esquema Peliculas</a>
+            <a href="/static/esq_articulo.png" target="_blank" class="btn">Ver Esquema Artículos</a>
+            <a href="/static/esq_proveedor.png" target="_blank" class="btn">Ver Esquema Proveedores</a>
+            <a href="/practice3" class="btn">&rarr;</a>
+        </div>
+        
+    </div><script src="/static/script.js"></script>
+
+</body>
+</html>

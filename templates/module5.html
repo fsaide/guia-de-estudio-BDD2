@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 5: Optimización - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link">1. SQL</a>
+            <a href="/module2" class="nav-link">2. Restricciones</a>
+            <a href="/module3" class="nav-link">3. Vistas</a>
+            <a href="/module4" class="nav-link">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link active">5. Optimización</a>
+            <a href="/module6" class="nav-link">6. Seguridad</a>
+        </nav>
+    </div>
+    
+    <h2>Módulo 5: Optimización de Consultas ⚡</h2>
+
+    <div class="module-content">
+        <p>La **optimización de consultas** es el proceso mediante el cual el SGBD analiza una consulta SQL y elige la estrategia de ejecución más eficiente para recuperar los datos solicitados. El objetivo principal es minimizar el uso de recursos del sistema, especialmente el tiempo de respuesta y los accesos a disco (I/O), que suelen ser la operación más costosa.</p>
+        
+        <h4>Proceso General de una Consulta</h4>
+        <ol>
+            <li><strong>Análisis (Parsing) y Validación</strong>: El SGBD verifica la sintaxis de la consulta, valida los nombres de tablas y columnas, y traduce la consulta a una representación interna, a menudo basada en el álgebra relacional.</li>
+            <li><strong>Optimización</strong>: El **optimizador** genera múltiples planes de ejecución lógicamente equivalentes para la consulta. Utiliza diversas técnicas para elegir el plan que estima tendrá el menor costo.</li>
+            <li><strong>Generación de Código</strong>: El plan elegido se traduce a código ejecutable de bajo nivel.</li>
+            <li><strong>Ejecución</strong>: El código se ejecuta para obtener el resultado final.</li>
+        </ol>
+
+        <h4>Estrategias de Optimización</h4>
+        <p>El optimizador combina principalmente dos enfoques:</p>
+        <ul>
+            <li><strong>Optimización Heurística (Basada en Reglas)</strong>: Aplica un conjunto de reglas de equivalencia del álgebra relacional para transformar el árbol de la consulta inicial en una forma que generalmente es más eficiente. La heurística fundamental es <strong>realizar las operaciones más restrictivas (Selecciones σ) y las que reducen columnas (Proyecciones π) lo antes posible</strong> ("empujarlas hacia abajo" en el árbol de consulta). Esto reduce el tamaño de los conjuntos de datos intermedios que manejan las operaciones más costosas como los Joins (⋈). Otras reglas incluyen convertir productos cartesianos seguidos de selecciones en Joins .</li>
+            <li><strong>Optimización Basada en Costo</strong>: Es el enfoque más sofisticado. El optimizador genera varios planes de ejecución posibles (diferentes órdenes de Join, diferentes algoritmos de Join, uso o no de índices) y **estima el costo** de cada uno. Para ello, se basa fundamentalmente en **estadísticas almacenadas sobre la base de datos**, como:
+                <ul>
+                    <li>Número de filas (cardinalidad) de cada tabla.</li>
+                    <li>Número de bloques de disco ocupados por cada tabla.</li>
+                    <li>Número de valores distintos en cada columna.</li>
+                    <li>Valores mínimo y máximo de las columnas.</li>
+                    <li>Histogramas de distribución de datos.</li>
+                    <li>Información sobre los índices existentes.</li>
+                </ul>
+                El plan con el **menor costo estimado** es el elegido para la ejecución. No se garantiza que sea el óptimo absoluto, pero suele ser una estrategia eficiente.</li>
+        </ul>
+        
+        <h4>Índices</h4>
+        <p>Un **índice** es una estructura de datos auxiliar asociada a una tabla o vista, diseñada para acelerar las operaciones de búsqueda y recuperación de datos. Funcionan de manera similar al índice de un libro: permiten localizar rápidamente las filas que cumplen ciertos criterios sin tener que recorrer toda la tabla (evitando un `Seq Scan`).</p>
+        <ul>
+            <li><strong>Tipos Comunes</strong>:
+                <ul>
+                    <li><strong>Árbol B (B-Tree)</strong>: Es el tipo de índice más común y versátil, usado por defecto en muchos SGBD como PostgreSQL. Son eficientes para búsquedas por igualdad (`=`), rango (`>`, `<`, `BETWEEN`), ordenamiento (`ORDER BY`) y patrones que comienzan con un prefijo (`LIKE 'prefijo%'`).</li>
+                    <li><strong>Hash</strong>: Son extremadamente rápidos para búsquedas por **igualdad exacta** (`=`). Sin embargo, no son útiles para búsquedas por rango ni para ordenamiento.</li>
+                    <li>Otros tipos: GiST, GIN (para tipos de datos complejos como arrays, texto completo, geométricos), BRIN (para tablas muy grandes con datos correlacionados físicamente).</li>
+                </ul>
+            </li>
+             <li><strong>Creación</strong>: <code>CREATE INDEX nombre_idx ON nombre_tabla [USING metodo] (col1, col2, ...) [WHERE predicado];</code> . Se pueden crear sobre una o múltiples columnas, e incluso índices parciales (<code>WHERE</code>) que solo indexan un subconjunto de filas.</li>
+             <li><strong>Costo</strong>: Si bien aceleran las lecturas (<code>SELECT</code>), los índices **ralentizan las operaciones de escritura** (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>), ya que el índice también debe ser actualizado. Por ello, se deben crear con criterio solo donde aporten un beneficio significativo.</li>
+        </ul>
+
+        <h4>Comando <code>EXPLAIN</code></h4>
+        <p>Es una herramienta fundamental para entender cómo el SGBD planea ejecutar una consulta. Al anteponer <code>EXPLAIN</code> (o <code>EXPLAIN ANALYZE</code> para ver tiempos reales) a una consulta <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code> o <code>DELETE</code>, el SGBD no ejecuta la consulta, sino que devuelve el **plan de ejecución** elegido por el optimizador.</p>
+        <ul>
+            <li>Permite identificar cuellos de botella, como escaneos secuenciales (`Seq Scan`) en tablas grandes, algoritmos de Join ineficientes, o el no uso de índices existentes.</li>
+            <li>Es la base para diagnosticar y mejorar el rendimiento de consultas lentas, por ejemplo, decidiendo si crear un nuevo índice o reformular la consulta.</li>
+        </ul>
+                
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>Entendiendo <code>EXPLAIN</code>: Tipos de Scan y Joins</strong></p>
+            <ul>
+                <li><strong><code>Seq Scan</code> (Sequential Scan):</strong> Lectura completa de la tabla. Generalmente malo para tablas grandes si se buscan pocas filas.</li>
+                <li><strong><code>Index Scan</code>:</strong> Usa un índice B-Tree para encontrar filas específicas. Bueno para selectividad alta (pocas filas cumplen la condición).</li>
+                <li><strong><code>Bitmap Heap Scan</code>:</strong> Combina resultados de uno o más índices para buscar filas de manera eficiente. Útil con múltiples condiciones `OR` o índices parciales.</li>
+                <li><strong><code>Nested Loop Join</code>:</strong> Compara cada fila de la tabla externa con cada fila de la interna. Eficiente si una de las tablas es muy pequeña.</li>
+                <li><strong><code>Hash Join</code>:</strong> Crea una tabla hash en memoria con una tabla y la sondea con la otra. Eficiente para joins grandes donde no hay índices útiles o la memoria es suficiente.</li>
+                <li><strong><code>Merge Join</code>:</strong> Requiere que ambas entradas estén ordenadas por la clave de join. Eficiente para joins grandes si los datos ya están ordenados o se pueden ordenar eficientemente.</li>
+            </ul>
+            <p><strong>La Importancia de <code>ANALYZE</code>:</strong> La optimización basada en costo depende críticamente de estadísticas precisas. El comando <code>ANALYZE nombre_tabla;</code> (o <code>VACUUM ANALYZE;</code>) recolecta o actualiza estas estadísticas. En PostgreSQL, el proceso `autovacuum` suele encargarse de esto, pero puede ser necesario ejecutarlo manualmente después de cargas masivas de datos o cambios significativos en la distribución de los mismos para asegurar que el optimizador tome buenas decisiones.</p>
+        </div>
+        <div class="link-container">
+            <a href="/module4" class="btn">&larr;</a>
+            <a href="/quiz?module=5" target="_blank" class="btn">Quiz del Módulo 5</a>
+            <a href="/practice5" target="_blank" class="btn">Practica del Módulo 5</a>
+            <a href="/module6" class="btn">&rarr;</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

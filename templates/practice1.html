@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 1</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+
+    <div class="container">
+
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link active">practico 1</a>
+            <a href="/practice2" class="nav-link">practico 2</a>
+            <a href="/practice3" class="nav-link">practico 3</a>
+            <a href="/practice4" class="nav-link">practico 4</a>
+            <a href="/practice5" class="nav-link">practico 5</a>
+            <a href="/practice6" class="nav-link">practico 6</a>
+        </nav>
+
+    </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 1</h1>
+        </div>
+        
+        <h2>Parte 1: Consultas SQL</h2>
+
+        <p>Considere los esquemas de las <strong>Figuras 1 y 2</strong>, correspondientes a una Base de Datos de un Sistema de Voluntariado (unc_esq_voluntario) y de un Sistema de Distribución de Películas (unc_esq_peliculas), respectivamente. </p>
+        <p>Plantee las consultas SQL que permitan recuperar la siguiente información y ejecútelas sobre la base de datos. </p>
+
+        <h3>Consultas sobre una tabla (esq. Voluntarios): </h3>
+        <ol>
+            <li>Muestre el apellido, nombre, las horas aportadas y la fecha de nacimiento de todos los voluntarios cuya tarea sea IT_PROG o ST_CLERK y cuyas horas aportadas no superen 7.000. Ordene por apellido y nombre.</li>
+            <li>Genere un listado ordenado por número de voluntario, incluyendo también el nombre y apellido y el e-mail de los voluntarios con menos de 10000 horas aportadas. Coloque como encabezado de las columnas los títulos ‘Numero’, 'Nombre y apellido' y 'Contacto'.</li>
+            <li>Genere un listado de los distintos id de coordinadores en la base de Voluntariado. Tenga en cuenta de no incluir el valor nulo en el resultado. </li>
+            <li>Muestre los códigos de las diferentes tareas que están desarrollando los voluntarios que no registran porcentaje de donación.</li>
+            <li>Muestre los 5 voluntarios que poseen más horas aportadas y que hayan nacido después del año 1995.</li>
+            <li>Liste el id, apellido, nombre y edad de los voluntarios de entre 40 y 50 años, con fecha de cumpleaños en el mes actual. Limite el resultado a los 3 voluntarios de mayor edad.</li>
+            <li>Encuentre la cantidad mínima, máxima y promedio de horas aportadas por los voluntarios de más de 30 años.</li>
+            <li>Por cada institución con identificador conocido, indicar la cantidad de voluntarios que trabajan en ella y el total de horas que aportan.</li>
+            <li>Muestre el identificador de las instituciones y la cantidad de voluntarios que trabajan en cada una de ellas, sólo de aquellas instituciones que tengan más de 10 voluntarios.</li>
+            <li>Liste los coordinadores que tienen a su cargo más de 3 voluntarios dentro de una misma institución.</li>
+        </ol>
+
+        <h3>Consultas sobre más de una tabla (esq. Peliculas): </h3>
+        
+        <h4>Consultas para resolver mediante ensamble/s (NATURAL/INNER/OUTER JOIN).</h4>
+        <ol start="11">
+            <li>Muestre los ids, nombres y apellidos de los empleados que no poseen jefe. Incluya también el nombre de la tarea que cada uno realiza, verificando que el sueldo máximo de la misma sea superior a 14800. </li>
+            <li>Determine si hay empleados que reciben un sueldo superior al de sus respectivos jefes.</li>
+            <li>Liste el identificador, nombre y tipo de los distribuidores que hayan entregado películas en idioma Espa&ntilde;ol luego del a&ntilde;o 2010. Incluya en cada caso la cantidad de películas distintas entregadas.</li>
+            <li>Para cada uno de los empleados registrados en la base, liste su apellido junto con el apellido de su jefe, en caso de tenerlo, sino incluya la expresión ‘(no posee)’. Ordene el resultado por el apellido del empleado.</li>
+            <li>Liste el id y nombre de todos los distribuidores existentes junto con la cantidad de videos a los que han realizado entregas. Ordene el resultado por dicha cantidad en forma descendente.</li>
+        </ol>
+
+        <h4>Consultas para resolver con subconsultas (IN, NOT IN, EXISTS, NOT EXISTS).</h4>
+        <ol start="16">
+            <li>Liste los datos de las películas que nunca han sido entregadas por un distribuidor nacional.</li>
+            <li>Indicar los departamentos (nombre e identificador completo) que tienen más de 3 empleados realizando tareas de sueldo mínimo inferior a 6000. Mostrar el resultado ordenado por el id de departamento.</li>
+            <li>Liste los datos de los Departamentos en los que trabajan menos del 10 % de los empleados registrados.</li>
+            <li>Encuentre el/los departamento/s con la mayor cantidad de empleados.</li>
+            <li>Resuelva los servicios del grupo anterior mediante consultas anidadas, en caso que sea posible.</li>
+        </ol>
+
+        <h4>Consultas para resolver con operadores de conjuntos (o simulando la operación)</h4>
+        <ol start="21">
+            <li>Encuentre los id de distribuidor correspondientes a distribuidores que no han realizado entregas.</li>
+            <li>Verifique si hay empleados que son jefes de otro/s empleado/s y que además son jefes de algún departamento.</li>
+            <li>Liste los datos personales de todos los distribuidores (nacionales e internacionales) junto con el encargado, para el caso de distribuidores nacionales. </li>
+            <li>Determine si hay películas que han sido entregadas a todos los videos. En ese caso, liste sus datos completos.</li>
+        </ol>
+
+        <h3>Interpretación de resultados donde intervienen valores nulos</h3>
+        <ol start="25">
+            <li>Analice los resultados de los siguientes grupos de consultas: </li>
+        </ol>
+        
+        <ol style="list-style-type: lower-latin; padding-left: 30px;">
+            <li>
+                <pre><code><span class="sql-keyword">SELECT</span> <span class="sql-function">avg</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(*)
+<span class="sql-keyword">FROM</span> voluntario;</code></pre>
+                <pre><code><span class="sql-keyword">SELECT</span> <span class="sql-function">avg</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(*)
+<span class="sql-keyword">FROM</span> voluntario <span class="sql-keyword">WHERE</span> <span class="sql-identifier">porcentaje</span> <span class="sql-keyword">IS NOT NULL</span>;</code></pre>
+                <pre><code><span class="sql-keyword">SELECT</span> <span class="sql-function">avg</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(<span class="sql-identifier">porcentaje</span>), <span class="sql-function">count</span>(*)
+<span class="sql-keyword">FROM</span> voluntario <span class="sql-keyword">WHERE</span> <span class="sql-identifier">porcentaje</span> <span class="sql-keyword">IS NULL</span>;</code></pre>
+            </li>
+            <li>
+                <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> voluntario 
+<span class="sql-keyword">WHERE</span> <span class="sql-identifier">nro_voluntario</span> <span class="sql-keyword">NOT IN</span> (<span class="sql-keyword">SELECT</span> <span class="sql-identifier">id_director</span> <span class="sql-keyword">FROM</span> institucion);</code></pre>
+                <pre><code><span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> voluntario 
+<span class="sql-keyword">WHERE</span> <span class="sql-identifier">nro_voluntario</span> <span class="sql-keyword">NOT IN</span> (<span class="sql-keyword">SELECT</span> <span class="sql-identifier">id_director</span> <span class="sql-keyword">FROM</span> institucion <span class="sql-keyword">WHERE</span> <span class="sql-identifier">id_director</span> <span class="sql-keyword">IS NOT NULL</span>);</code></pre>
+            </li>
+            <li>
+                <pre><code><span class="sql-keyword">SELECT</span> i.<span class="sql-identifier">id_institucion</span>, <span class="sql-function">count</span>(*)
+<span class="sql-keyword">FROM</span> institucion i <span class="sql-keyword">LEFT JOIN</span> voluntario v
+<span class="sql-keyword">ON</span> (i.<span class="sql-identifier">id_institucion</span> = v.<span class="sql-identifier">id_institucion</span>)
+<span class="sql-keyword">GROUP BY</span> i.<span class="sql-identifier">id_institucion</span>;</code></pre>
+                <pre><code><span class="sql-keyword">SELECT</span> v.<span class="sql-identifier">id_institucion</span>, <span class="sql-function">count</span>(*)
+<span class="sql-keyword">FROM</span> institucion i <span class="sql-keyword">LEFT JOIN</span> voluntario v
+<span class="sql-keyword">ON</span> (i.<span class="sql-identifier">id_institucion</span> = v.<span class="sql-identifier">id_institucion</span>)
+<span class="sql-keyword">GROUP BY</span> v.<span class="sql-identifier">id_institucion</span>;</code></pre>
+            </li>
+        </ol>
+
+        <h2>Parte 2: Consultas Avanzadas - Ventana - Recursión</h2>
+
+        <h3>Ejercicio 1</h3>
+        <p>Se desea obtener un listado de todos los voluntarios incluyendo identificador de voluntario, nombre, apellido, email, identificador de institución, horas aportadas y por cada voluntario el total de horas aportadas por todos los voluntarios de su misma institución. Ordenado por el total de horas aportadas por institución en orden descendente.</p>
+
+        <h3>Ejercicio 2</h3>
+        <p>Se desea obtener un listado de todos los voluntarios incluyendo su identificador, nombre, apellido, y la tarea que desempeñan. Además, se requiere calcular un ranking por tarea, que indique la posición de cada voluntario dentro de su tarea según la cantidad de horas aportadas, ubicando en los primeros puestos a quienes más horas han contribuido.</p>
+
+        <h3>Ejercicio 3</h3>
+        <p>Utilizando la consulta anterior, ¿cómo se modificaría para obtener sólo aquellos voluntarios que aportan más horas por tarea?</p>
+
+        <h3>Ejercicio 4</h3>
+        <p>Se desea obtener un informe con la cantidad de voluntarios agrupada a distintos niveles geográficos: por continente, por país y por ciudad. Probar variantes de GROUPING SETS, CUBE, y ROLLUP.</p>
+
+        <h3>Ejercicio 5</h3>
+        <p>Se desea obtener un listado de todos los voluntarios que incluya su número de voluntario, el identificador de la tarea que realiza, y la cantidad de horas aportadas. Además, se requiere calcular el promedio de horas aportadas por tarea y, para cada voluntario, la diferencia entre sus horas aportadas y ese promedio.</p>
+
+        <h3>Ejercicio 6</h3>
+        <p>Se desea generar un listado con los voluntarios que han superado las 100 horas aportadas en total. Realice la consulta con y sin CTE, al utilizar esta opción defina en la misma la lógica de filtrado de los voluntarios con alto nivel de participación.</p>
+
+        <h3>Ejercicio 7</h3>
+        <p>Utilizando el esquema de películas, generar un informe donde aparezca la pelí­cula más entregada por mes y año. Hacerlo con y sin funciones de ventana.</p>
+
+        <div class="schema-buttons">
+            <a href="/module1" target="_blank" class="btn">Teoria del Módulo 1</a>
+            <a href="esq_voluntario.png" target="_blank" class="btn">Ver Esquema Voluntarios</a>
+            <a href="esq_pelicula.png" target="_blank" class="btn">Ver Esquema Películas</a>
+            <a href="/practice2" class="btn">&rarr;</a>
+        </div>
+
+        <script src="/static/script.js"></script>
+
+    
+
+</body>
+</html>

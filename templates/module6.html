@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 6: Seguridad - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link">1. SQL</a>
+            <a href="/module2" class="nav-link">2. Restricciones</a>
+            <a href="/module3" class="nav-link">3. Vistas</a>
+            <a href="/module4" class="nav-link">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link">5. Optimización</a>
+            <a href="/module6" class="nav-link active">6. Seguridad</a>
+        </nav>
+    </div>
+
+    <h2>Módulo 6: Seguridad y Control de Acceso 🔐</h2>
+
+    <div class="module-content">
+        <p>La **seguridad de la base de datos** se refiere a las medidas implementadas para proteger la base de datos contra accesos no autorizados, modificaciones indebidas o denegación de servicio a usuarios legítimos. Implica definir quién puede acceder a qué datos y qué operaciones puede realizar sobre ellos.</p>
+
+        <h4>El Rol del Administrador de la Base de Datos (DBA)</h4>
+        <p>El DBA juega un papel central en la seguridad de la base de datos. Sus responsabilidades incluyen:</p>
+        <ul>
+            <li><strong>Gestión de Cuentas</strong>: Crear y administrar cuentas de usuario y roles.</li>
+            <li><strong>Asignación de Privilegios</strong>: Otorgar los permisos necesarios a usuarios o roles para que puedan realizar sus tareas.</li>
+            <li><strong>Revocación de Privilegios</strong>: Quitar permisos cuando ya no son necesarios o apropiados.</li>
+            <li><strong>Monitorización y Auditoría</strong>: Vigilar los accesos y las operaciones realizadas en la base de datos.</li>
+            <li><strong>Política de Seguridad</strong>: Implementar y asegurar el cumplimiento de la política de seguridad definida por la organización.</li>
+        </ul>
+        <p>El DBA suele tener una cuenta con privilegios elevados para realizar estas tareas.</p>
+
+        <h4>Modelos de Control de Acceso</h4>
+        <p>Los SGBD suelen implementar dos modelos principales para gestionar los permisos:</p>
+        <ul>
+            <li><strong>Control de Acceso Discrecional (DAC - Discretionary Access Control)</strong>:
+                <ul>
+                    <li>En este modelo, el **propietario** de un objeto (quien lo creó, por ejemplo, el creador de una tabla) tiene control total sobre él y puede conceder (<code>GRANT</code>) o revocar (<code>REVOKE</code>) permisos a otros usuarios de forma discrecional.</li>
+                    <li><strong><code>GRANT</code></strong>: Otorga privilegios específicos (como <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>REFERENCES</code>, etc.) sobre un objeto (tabla, vista, secuencia) a uno o más usuarios o roles .
+                        <code>GRANT SELECT, INSERT ON MiTabla TO usuario1, rol_ventas;</code></li>
+                    <li><strong><code>REVOKE</code></strong>: Quita privilegios previamente concedidos.
+                        <code>REVOKE INSERT ON MiTabla FROM usuario1;</code></li>
+                    <li><strong><code>WITH GRANT OPTION</code></strong>: Al otorgar un permiso con esta opción, se permite que el receptor del permiso pueda, a su vez, otorgarlo a otros usuarios. La revocación de permisos otorgados con esta opción puede ser compleja y requiere especificar <code>CASCADE</code> (para revocar también los permisos dependientes) o <code>RESTRICT</code> (para fallar si hay dependencias) .</li>
+                </ul>
+            </li>
+            <li><strong>Control de Acceso Basado en Roles (RBAC - Role-Based Access Control)</strong>:
+                <ul>
+                    <li>Simplifica la administración de permisos en entornos con muchos usuarios. En lugar de asignar permisos directamente a cada usuario, se crean **roles** que agrupan un conjunto de privilegios relacionados con una función o tarea específica (ej: rol "analista_ventas", rol "administrador_nomina").</li>
+                    <li>Los **privilegios** se otorgan a los roles, y luego los **roles** se asignan a los usuarios.</li>
+                    <li><strong><code>CREATE ROLE nombre_rol;</code></strong> </li>
+                    <li><strong><code>GRANT privilegio ON objeto TO nombre_rol;</code></strong></li>
+                    <li><strong><code>GRANT nombre_rol TO usuario1, usuario2;</code></strong> </li>
+                    <li>Un usuario puede tener asignados múltiples roles, acumulando los permisos de todos ellos.</li>
+                    <li>Si se modifican los permisos de un rol, el cambio afecta automáticamente a todos los usuarios que tienen asignado ese rol, facilitando la gestión.</li>
+                    <li><strong><code>WITH ADMIN OPTION</code></strong>: Permite al receptor del rol asignarlo (<code>GRANT</code>) a otros usuarios o roles.</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Seguridad a través de Vistas</h4>
+        <p>Las vistas son una herramienta importante para la seguridad:</p>
+        <ul>
+            <li>Permiten **ocultar columnas** sensibles a ciertos usuarios.</li>
+            <li>Permiten **filtrar filas** basándose en criterios (ej: mostrar solo los pedidos del departamento del usuario actual).</li>
+            <li>Se pueden otorgar permisos directamente sobre las vistas, limitando el acceso a las tablas base subyacentes.</li>
+            <li>Para crear una vista, el usuario necesita tener el privilegio <code>SELECT</code> sobre todas las tablas base involucradas.</li>
+        </ul>
+
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>El Ataque Más Común: Inyección de SQL (SQL Injection)</strong></p>
+            <p>La inyección de SQL sigue siendo una de las vulnerabilidades web más peligrosas. Ocurre cuando una aplicación construye consultas SQL concatenando directamente entradas de usuario (por ejemplo, de un formulario web) sin escaparlas o validarlas adecuadamente. Un atacante puede introducir código SQL malicioso en esos campos de entrada para manipular la consulta original.</p>
+            <p><strong>Ejemplo Peligroso (NO HACER):</strong></p>
+            <code>query := "SELECT * FROM users WHERE username = '" + userInput + "' AND password = '" + userPass + "'"</code>
+            <p>Si un atacante introduce <code>' OR '1'='1</code> en `userInput`, la consulta resultante podría ser:</p>
+            <code>SELECT * FROM users WHERE username = '' OR '1'='1' AND password = '...'</code>
+            <p>Esto podría permitirle iniciar sesión sin conocer una contraseña válida.</p>
+            <p><strong>Prevención Fundamental: Consultas Parametrizadas (Prepared Statements)</strong></p>
+            <p>¡Nunca construyas consultas concatenando strings! La solución estándar y más segura es usar <strong>consultas parametrizadas</strong>. En Go, con el paquete `database/sql`, esto se hace así:</p>
+            <code>rows, err := db.Query("SELECT * FROM users WHERE username = $1 AND password = $2", userInput, userPass)</code>
+            <p>El driver de la base de datos se encarga de tratar `userInput` y `userPass` siempre como datos literales, nunca como código SQL ejecutable, eliminando el riesgo de inyección.</p>
+            <p><strong>Principio de Menor Privilegio:</strong> Al configurar usuarios de base de datos para tus aplicaciones, otórgales únicamente los permisos estrictamente necesarios para realizar sus tareas. Evita usar cuentas con privilegios de DBA para operaciones rutinarias de la aplicación.</p>
+        </div>
+        <div class="link-container">
+            <a href="/module5" class="btn">&larr;</a>
+            <a href="/quiz?module=6" target="_blank" class="btn">Quiz del Módulo 6</a>
+            <a href="/practice6" target="_blank" class="btn">Practica del Módulo 6</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

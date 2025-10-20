@@ -1,0 +1,279 @@
+/* --- Variables de Tema (Estilo Pergamino) --- */
+:root {
+      --font-primary: 'Merriweather', serif;
+      --font-code: "Courier New", Courier, monospace;
+      
+      /* Tema Claro */
+      --bg-light: #fdf8e1;
+      --container-bg-light: #faf0e6;
+      --font-color-light: #3c3c3c;
+      --primary-color-light: #8b4513;
+      --primary-hover-light: #a0522d;
+      --shadow-color-light: rgba(0, 0, 0, 0.1);
+      --border-color-light: #d2b48c;
+    
+    /* Colores secundarios adaptados */
+      --secondary-color-light: #a0522d;
+      --secondary-hover-light: #8b4513;
+      --accent-bg-light: #fdf8e1;
+      --accent-hover-light: #faf0e6;
+
+      /* Tema Oscuro */
+      --bg-dark: #2c2c2c;
+      --container-bg-dark: #3e3e3e;
+      --font-color-dark: #e0e0e0;
+      --primary-color-dark: #d2b48c;
+      --primary-hover-dark: #e3c19c;
+      --shadow-color-dark: rgba(0, 0, 0, 0.3);
+      --border-color-dark: #f0bf55;
+
+    /* Colores secundarios adaptados */
+      --secondary-color-dark: #e3c19c;
+      --secondary-hover-dark: #f0bf55;
+      --accent-bg-dark: #2c2c2c;
+      --accent-hover-dark: #3e3e3e;
+}
+
+/* --- Estilos Base (Estilo Pergamino) --- */
+body {
+      font-family: var(--font-primary);
+      line-height: 1.8;
+      margin: 0;
+      padding: 40px 25px; /* <- Copiado de Pergamino */
+      background-color: var(--bg-light);
+    /* <- Fondo con patrón de Pergamino */
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d2b48c' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      color: var(--font-color-light);
+      transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body.dark-mode {
+      background-color: var(--bg-dark);
+    /* <- Fondo con patrón de Pergamino (oscuro) */
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238b4513' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      color: var(--font-color-dark);
+}
+
+/* Scrollbar adaptado a los colores Pergamino */
+body::-webkit-scrollbar { width: 10px; }
+body::-webkit-scrollbar-track { background: var(--accent-bg-light); }
+body.dark-mode::-webkit-scrollbar-track { background: var(--accent-bg-dark); }
+body::-webkit-scrollbar-thumb { background-color: var(--border-color-light); border-radius: 20px; border: 3px solid var(--bg-light); }
+body.dark-mode::-webkit-scrollbar-thumb { background-color: var(--border-color-dark); border: 3px solid var(--bg-dark); }
+
+/* Container (Estilo Pergamino) */
+.container {
+      max-width: 950px;
+      margin: auto; /* <- Copiado de Pergamino */
+      background: var(--container-bg-light);
+      padding: 35px 50px; /* <- Copiado de Pergamino */
+      border-radius: 8px; /* <- Copiado de Pergamino */
+      box-shadow: 0 10px 25px var(--shadow-color-light); /* <- Copiado de Pergamino */
+      border: 1px solid var(--border-color-light); /* <- Copiado de Pergamino */
+      transition: background-color 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+}
+body.dark-mode .container {
+      background: var(--container-bg-dark);
+      border-color: var(--border-color-dark);
+      box-shadow: 0 10px 30px var(--shadow-color-dark);
+}
+
+/* Cabecera de Página (Usa variables, se actualiza solo) */
+.page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap; 
+      gap: 15px;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border-color-light);
+}
+body.dark-mode .page-header {
+      border-bottom-color: var(--border-color-dark);
+}
+
+/* --- Botones (Estilo Pergamino) --- */
+.btn {
+      display: inline-block;
+      background-color: var(--primary-color-light);
+      color: #fff;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-size: 1.15em;
+      font-weight: 600;
+      margin: 10px; /* <- Margen añadido para espaciar botones */
+      border: 1px solid transparent;
+      border-bottom: 3px solid rgba(0,0,0,0.2);
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
+}
+body.dark-mode .btn {
+      background-color: var(--primary-color-dark);
+      color: #2c2c2c;
+      border-bottom-color: rgba(0,0,0,0.4);
+}
+.btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+      background-color: var(--primary-hover-light);
+}
+body.dark-mode .btn:hover {
+      background-color: var(--primary-hover-dark);
+}
+.btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Adaptación del .btn-secondary al estilo Pergamino */
+.btn-secondary {
+      background-color: var(--container-bg-light);
+      color: var(--primary-color-light);
+      border: 1px solid var(--primary-color-light);
+}
+body.dark-mode .btn-secondary {
+      background-color: var(--container-bg-dark);
+      color: var(--primary-color-dark);
+      border-color: var(--primary-color-dark);
+}
+.btn-secondary:hover {
+      background-color: var(--accent-hover-light);
+      border-color: var(--primary-hover-light);
+}
+body.dark-mode .btn-secondary:hover {
+      background-color: var(--accent-hover-dark);
+      border-color: var(--primary-hover-dark);
+}
+
+/* --- Títulos y Contenido --- */
+h2 {
+      border-bottom: 2px solid var(--primary-color-light);
+      padding-bottom: 12px;
+      font-size: 1.8em;
+      color: var(--font-color-light);
+      margin-bottom: 25px;
+      text-align: center; /* Centrar título principal */
+    text-shadow: 1px 1px 2px var(--shadow-color-light); /* Sombra de Pergamino */
+}
+body.dark-mode h2 { 
+    border-bottom-color: var(--primary-color-dark); 
+    color: var(--font-color-dark); 
+    text-shadow: 1px 1px 2px var(--shadow-color-dark); /* Sombra de Pergamino */
+}
+h3 { 
+    color: var(--primary-color-light); 
+    font-size: 1.5em; 
+    margin-top: 1.5em; 
+    text-align: center; 
+}
+body.dark-mode h3 { 
+    color: var(--primary-color-dark); 
+}
+
+.summary-content p, .summary-content ul {
+      margin-bottom: 1.2em;
+      font-size: 1.1em;
+}
+
+/* HR (Usa variables, se actualiza solo) */
+hr {
+      border: 0;
+      height: 1px;
+      background-image: linear-gradient(to right, rgba(0,0,0,0), var(--border-color-light), rgba(0,0,0,0));
+      margin: 30px 0;
+}
+body.dark-mode hr {
+        background-image: linear-gradient(to right, rgba(255,255,255,0), var(--border-color-dark), rgba(255,255,255,0));
+}
+
+/* --- Contenedor de Botones de Módulo --- */
+.module-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+      text-align: center;
+}
+
+/* Esta regla ya no es necesaria, el .btn base es grande */
+/*
+.module-btn {
+      padding: 15px 20px; 
+      font-size: 1.1em;
+}
+*/
+
+/* --- Interruptor Modo Oscuro (Ya estaba en estilo Pergamino) --- */
+.theme-switch-wrapper {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+}
+.theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+}
+.theme-switch input { display:none; }
+.slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+}
+.slider:before {
+      position: absolute;
+      content: "";
+      height: 26px; width: 26px;
+      left: 4px; bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+      background-repeat: no-repeat;
+      background-position: center;
+}
+
+/* Sun icon for light mode */
+body:not(.dark-mode) .slider:before {
+      background-image: url('sun.svg');
+}
+
+/* Moon icon for dark mode */
+body.dark-mode .slider:before {
+      background-image: url('moon.svg');
+}
+
+input:checked + .slider {
+      background-color: var(--primary-color-light);
+}
+body.dark-mode input:checked + .slider {
+      background-color: var(--primary-color-dark);
+}
+input:checked + .slider:before {
+      transform: translateX(26px);
+}
+
+/* --- Elementos Genéricos --- */
+code { 
+    background-color: var(--accent-hover-light); 
+    padding: 3px 6px; 
+    border-radius: 4px; 
+    font-family: var(--font-code); 
+    font-size: 0.95em; 
+    border: 1px solid var(--border-color-light); /* Borde estilo Pergamino */
+}
+body.dark-mode code { 
+    background-color: var(--accent-hover-dark); 
+    border-color: var(--border-color-dark);
+}
+ul { list-style: disc; padding-left: 25px; }
+li { margin-bottom: 10px; }

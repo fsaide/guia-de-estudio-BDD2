@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 5</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+    <div class="container">
+
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link">practico 1</a>
+            <a href="/practice2" class="nav-link">practico 2</a>
+            <a href="/practice3" class="nav-link">practico 3</a>
+            <a href="/practice4" class="nav-link">practico 4</a>
+            <a href="/practice5" class="nav-link active">practico 5</a>
+            <a href="/practice6" class="nav-link">practico 6</a>
+        </nav>
+        </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 5</h1>
+            <h2>Optimización de consultas</h2>
+        </div>
+        
+        <h3>Ejercicio 1</h3>
+        <p>Con el comando <code>EXPLAIN</code> explique la heurística que utiliza para el <i>query plan</i> el optimizador de PostgreSQL en cada una de las sentencias:</p>
+
+        <p>a) <i>Listado de las entregas que poseen las película de terror</i> (esquema Películas)</p>
+        <pre><code class="language-sql">
+SELECT p.titulo, e.nro_entrega
+FROM pelicula p, renglon_entrega re, entrega e
+WHERE p.codigo_pelicula = re.codigo_pelicula
+  AND re.nro_entrega = e.nro_entrega
+  AND genero = 'Terror';
+        </code></pre>
+
+        <p>b) <i>Listado de los datos de contacto (nombre, apellido, email y teléfono) de todos los voluntarios que hayan desarrollado tareas de hasta 5000 hs (max_horas - min_horas) y que las hayan finalizado antes del 01/01/2024</i> (esquema Voluntario).</p>
+        <pre><code class="language-sql">
+SELECT V.nombre, V.apellido, V.e_mail, V.telefono
+FROM Voluntario V
+WHERE V.nro_voluntario IN (
+    SELECT H.nro_voluntario
+    FROM Historico H
+    WHERE H.fecha_fin < to_date('2024-01-01', 'yyyy-mm-dd') -- Fecha actualizada a 2024 como dice el texto
+      AND H.id_tarea IN (
+          SELECT T.id_tarea
+          FROM Tarea T
+          WHERE (T.max_horas - T.min_horas) <= 5000
+      )
+);
+        </code></pre>
+
+        <hr>
+
+        <h3>Ejercicio 2</h3>
+        <p>Dada la siguiente consulta sobre el esquema de voluntarios, analice su plan de ejecución. ¿Es posible mejorarla?</p>
+        <pre><code class="language-sql">
+SELECT * FROM tarea
+WHERE id_tarea IN (
+    SELECT t.id_tarea
+    FROM tarea t
+    INNER JOIN voluntario v ON (t.id_tarea = v.id_tarea)
+    GROUP BY t.id_tarea
+    HAVING COUNT(v.nro_voluntario) > 5
+);
+        </code></pre>
+
+        <hr>
+
+        <h3>Ejercicio 3</h3>
+        <p>Considere el siguiente esquema de una base de datos de empleados de grupos de investigación:</p>
+
+        <p>Suponga la existencia de las siguientes tuplas en las respectivas tablas:</p>
+        <ul>
+            <li><strong>EMPLEADO:</strong> (1, 'Juan', 'Perez', 'investigador'); (2, 'Rosa', 'Gomez', 'investigador'); (3, 'Bruno', 'Fernandez', 'becario'); (4, 'Ignacio', 'Rodriguez', 'becario'); (5, 'Alejandro', 'Perez', 'investigador'); (6, 'Sebastian', 'Solano', 'investigador');</li>
+            <li><strong>PROYECTO:</strong> (1, 'ROBOTICS', '2018-01-01', '2020-01-01'); (2, 'IA', '2017-01-01', '2020-01-01'); (3, 'IMAGE', '2015-01-01', '2017-01-01');</li>
+            <li><strong>TRABAJA_EN:</strong> (1, 1, 40); (2, 1, 40); (3, 1, 20); (4, 1, 20); (5, 1, 40); (6, 1, 40); (1, 2, 40); (3, 2, 20); (6, 2, 20); (3, 3, 10); (6, 3, 10);</li>
+        </ul>
+        <p>Con el comando <code>EXPLAIN ANALYZE</code> explique la heurística que utiliza para el <i>query plan</i> del optimizador de PostgreSQL en cada una de las sentencias siguientes:</p>
+        
+        <p>a) <i>Listar los datos de los empleados investigadores que trabajan en algún proyecto</i></p>
+        <pre><code class="language-sql">
+SELECT DISTINCT E.*
+FROM   EMPLEADO E,
+       TRABAJA_EN T,
+       PROYECTO P
+WHERE  E.id_empleado = T.id_empleado
+  AND  P.cod_proyecto = T.cod_proyecto
+  AND  E.cargo = 'investigador';
+        </code></pre>
+        <ol style="list-style-type: lower-alpha; counter-reset: list-alpha 0;">
+             <li>¿Es necesario el ensamble con Empleado?</li>
+             <li>¿Es necesario el ensamble con Proyecto?</li>
+             <li>¿Qué implicancias tiene la inclusión del “distinct”?</li>
+        </ol>
+
+        <p>b) <i>Listar los datos de los proyectos de IA que tienen empleados trabajando</i></p>
+        <pre><code class="language-sql">
+SELECT DISTINCT P.*
+FROM   TRABAJA_EN T,
+       PROYECTO P
+WHERE  P.cod_proyecto = T.cod_proyecto
+  AND  P.nombre = 'IA';
+        </code></pre>
+        <ol style="list-style-type: lower-alpha; counter-reset: list-alpha 1;"> <li>Analizar para la restricción de clave primaria establecida como (id_empleado, cod_proyecto).</li>
+             <li>Analizar para la restricción de clave primaria establecida como (cod_proyecto, id_empleado).</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 4</h3>
+        <p>Para cada una de las siguientes consultas sobre el esquema de Películas:</p>
+        <p>a) Analizar cada caso y justificar la creación o no de índices considerando que cada consulta es muy frecuente en el contexto planteado. Considere también la creación de índices que sirvan para más de una de las consultas.</p>
+        <p>b) Conociendo que las opciones de estructuras de índices en PostgreSQL son árboles B+ y Hash, analizar cuál de ellas resulta más eficiente en cada situación y por qué.</p>
+        <ol style="list-style-type: lower-alpha; counter-reset: list-alpha 1;"> <li>
+                 <pre><code class="language-sql">
+SELECT * FROM entrega
+WHERE MONTHS_BETWEEN(SYSDATE, fecha_entrega) > 100; -- Nota: MONTHS_BETWEEN y SYSDATE son específicos de Oracle. PostgreSQL usaría AGE o similar.
+                 </code></pre>
+             </li>
+             <li>
+                 <pre><code class="language-sql">
+SELECT * FROM distribuidor WHERE id_distribuidor > 50;
+                 </code></pre>
+             </li>
+             <li>
+                 <pre><code class="language-sql">
+SELECT * FROM distribuidor WHERE tipo = 'N';
+                 </code></pre>
+             </li>
+             <li>
+                 <pre><code class="language-sql">
+SELECT * FROM empleado
+WHERE nombre = 'Juan Lucas' AND e_mail = 'Pla@gmail.com';
+                 </code></pre>
+             </li>
+              <li>
+                 <pre><code class="language-sql">
+SELECT * FROM empleado
+WHERE nombre LIKE 'An%' AND e_mail = 'Marise@gmail.com';
+                 </code></pre>
+             </li>
+             <li>
+                 <pre><code class="language-sql">
+SELECT * FROM empleado
+WHERE nombre LIKE '%Maria' AND e_mail = 'Marise@gmail.com';
+                 </code></pre>
+             </li>
+        </ol>
+
+        <div class="schema-buttons">
+            <a href="/practice4" class="btn">&larr;</a>
+            <a href="/module5" target="_blank" class="btn">Teoria del Módulo 5</a>
+             <a href="/static/esq_empleado.png" target="_blank" class="btn">Ver Esquema Empleado</a>
+             <a href="/practice6" class="btn">&rarr;</a>
+        </div>
+
+    </div><script src="/static/script.js"></script>
+
+</body>
+</html>

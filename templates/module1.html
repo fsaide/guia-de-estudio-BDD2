@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 1: SQL - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link active">1. SQL</a>
+            <a href="/module2" class="nav-link">2. Restricciones</a>
+            <a href="/module3" class="nav-link">3. Vistas</a>
+            <a href="/module4" class="nav-link">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link">5. Optimización</a>
+            <a href="/module6" class="nav-link">6. Seguridad</a>
+        </nav>
+
+    </div>
+    
+    <h2>Módulo 1: Consultas en SQL 🔍</h2>
+
+    <div class="module-content">
+        <p>Es la instrucción fundamental para recuperar datos. Su formato básico es <code>SELECT | FROM | [WHERE]</code>.</p>
+        
+        <h4>Orden de Ejecución Lógico de una Consulta</h4>
+        <ol>
+            <li><b><code>FROM</code></b>: Obtiene el conjunto de datos inicial de las tablas.</li>
+            <li><b><code>WHERE</code></b>: Filtra las filas de forma individual.</li>
+            <li><b><code>GROUP BY</code></b>: Agrupa las filas resultantes en conjuntos.</li>
+            <li><b><code>HAVING</code></b>: Filtra los grupos que no cumplen una condición.</li>
+            <li><b><code>SELECT</code></b>: Proyecta (selecciona) las columnas finales.</li>
+            <li><b><code>ORDER BY</code></b>: Ordena el conjunto de resultados final.</li>
+            <li><b><code>LIMIT / OFFSET</code></b>: Restringe el número de filas devueltas.</li>
+        </ol>
+        
+        <h4>Cláusulas y Operadores Clave</h4>
+        <ul>
+            <li><b><code>DISTINCT</code></b>: Elimina filas duplicadas del resultado final.</li>
+            <li><b><code>LIKE</code></b>: Busca patrones en texto (comodines: <code>%</code> y <code>_</code>).</li>
+            <li><b><code>BETWEEN</code></b>: Define un rango inclusivo (<code>a >= x AND a <= y</code>).</li>
+            <li><b><code>IS NULL / IS NOT NULL</code></b>: Es la única forma correcta de comprobar valores nulos. Una comparación como <code>columna = NULL</code> siempre evalúa a "desconocido" (falso).</li>
+            <li><b>Funciones de Agregación</b>: <code>COUNT()</code>, <code>SUM()</code>, <code>AVG()</code>, <code>MAX()</code>, <code>MIN()</code>. Ignoran los valores <code>NULL</code> por defecto, a menos que se use <code>COUNT(*)</code> o la función <code>COALESCE(columna, valor_reemplazo)</code> para sustituir los nulos.</li>
+        </ul>
+        
+        <h4>Joins y Subconsultas</h4>
+        <ul>
+            <li><b>Joins</b>: Combinan filas de dos o más tablas.
+                <ul>
+                    <li><b><code>INNER JOIN</code></b>: Devuelve solo las filas que tienen correspondencia en ambas tablas.</li>
+                    <li><b><code>OUTER JOIN</code> (<code>LEFT</code>, <code>RIGHT</code>, <code>FULL</code>)</b>: Devuelven todas las filas de una tabla (o ambas para <code>FULL</code>) incluso si no hay correspondencia en la otra, rellenando con <code>NULL</code> los campos faltantes.</li>
+                </ul>
+            </li>
+            <li><b>Subconsultas</b>: Una consulta anidada dentro de otra. Pueden devolver una sola fila (single-row) o múltiples filas (multiple-row).
+                <ul>
+                    <li><b>Operadores para Múltiples Filas</b>: <code>IN</code> (igual a cualquier valor de la lista), <code>ANY</code> (compara con al menos un valor), <code>ALL</code> (compara con todos los valores), <code>EXISTS</code> (verifica si la subconsulta devuelve al menos una fila).</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <h4>Operadores de Conjuntos</h4>
+        <p>Combinan los resultados de dos o más consultas <code>SELECT</code>.</p>
+        <ul>
+            <li><b><code>UNION</code></b>: Combina los resultados y elimina duplicados. <code>UNION ALL</code> los combina sin eliminar duplicados.</li>
+            <li><b><code>INTERSECT</code></b>: Devuelve solo las filas que aparecen en ambos resultados.</li>
+            <li><b><code>EXCEPT</code></b>: Devuelve las filas del primer resultado que no están en el segundo.</li>
+        </ul>
+        
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>Buenas Prácticas en SQL:</strong></p>
+            <ul>
+                <li><strong>Evita <code>SELECT *</code> en producción:</strong> Selecciona explícitamente solo las columnas que necesitas. Mejora el rendimiento y hace el código más legible y robusto ante cambios en las tablas.</li>
+                <li><strong>Usa alias de tabla:</strong> En consultas con `JOINs`, usa alias cortos y consistentes (ej: `FROM Empleados e JOIN Departamentos d`) para mejorar la legibilidad.</li>
+                <li><strong>Prefiere <code>JOIN</code> explícito:</strong> La sintaxis <code>FROM TablaA, TablaB WHERE TablaA.id = TablaB.id</code> es antigua. Usa siempre <code>FROM TablaA INNER JOIN TablaB ON TablaA.id = TablaB.id</code>. Es más claro y menos propenso a errores.</li>
+                <li><strong>Indexación:</strong> Asegúrate de tener índices en las columnas usadas frecuentemente en cláusulas `WHERE`, `JOIN` y `ORDER BY` para acelerar las consultas.</li>
+            </ul>
+        </div>
+        <div class="link-container">
+            <a href="/quiz?module=1" target="_blank" class="btn">Quiz del Módulo 1</a>
+            <a href="/practice1" target="_blank" class="btn">Practica del Módulo 1</a>
+            <a href="/module2" class="btn">&rarr;</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

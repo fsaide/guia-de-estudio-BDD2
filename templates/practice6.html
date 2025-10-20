@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 6</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+    <div class="container">
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link">practico 1</a>
+            <a href="/practice2" class="nav-link">practico 2</a>
+            <a href="/practice3" class="nav-link">practico 3</a>
+            <a href="/practice4" class="nav-link">practico 4</a>
+            <a href="/practice5" class="nav-link">practico 5</a>
+            <a href="/practice6" class="nav-link active">practico 6</a>
+        </nav>
+        </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 6</h1>
+            <h2>Seguridad en Base de Datos - Control de Acceso</h2>
+        </div>
+
+        <h3>Ejercicio 1</h3>
+        <p>Considere la siguiente fracción del esquema del usuario <code>db_instal</code> que registra datos de las instalaciones de servicios a clientes:</p>
+        
+        <p>1- Suponga que <code>db_instal</code> ejecuta las siguientes sentencias:</p>
+        <pre><code class="language-sql">
+GRANT SELECT ON instalacion TO adm WITH GRANT OPTION;
+GRANT UPDATE ON instalacion TO adm WITH GRANT OPTION;
+GRANT DELETE ON instalacion TO adm;
+        </code></pre>
+
+        <p>2- Luego el usuario <code>adm</code> ejecuta las siguientes sentencias:</p>
+        <pre><code class="language-sql">
+GRANT SELECT ON instalacion TO doc;
+GRANT UPDATE(cantHoras, tarea) ON instalacion TO doc WITH GRANT OPTION;
+GRANT DELETE ON instalacion TO doc;
+        </code></pre>
+
+        <p>a) Realice el grafo de permisos correspondiente a las sentencias indicadas en 1 y 2. Analice qué sucede en cada caso y si alguna de ellas arroja algún error.</p>
+        <p>b) Establezca los permisos que conserva el usuario <code>doc</code> sobre la tabla <code>instalacion</code>, si el usuario <code>db_instal</code> ejecuta las siguientes sentencias (considere la posibilidad de error):</p>
+        <pre><code class="language-sql">
+REVOKE SELECT ON instalacion FROM adm CASCADE;
+REVOKE UPDATE(tarea) ON instalacion FROM adm CASCADE;
+        </code></pre>
+
+        <hr>
+
+        <h3>Ejercicio 2</h3>
+        <p>Considere la base de Voluntarios y suponga que las siguientes acciones son ejecutadas por un usuario U0 con privilegios de administrador, salvo que se especifique otro usuario. En cada caso indique la sentencia correspondiente según el estándar SQL para control de acceso.</p>
+        <p>Tenga en cuenta que las operaciones se realizan en el orden indicado y explique en caso de que algún ítem no pueda ser ejecutado.</p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Conceder al usuario U1 todos los privilegios sobre la tabla Institución, con posibilidad de concederlos a otros usuarios.</li>
+            <li>Permitir que el usuario U2 sólo consulte los datos de la tabla Voluntario.</li>
+            <li>Permitir que U2 autorice a U3 para que pueda insertar en la tabla Voluntario.</li>
+            <li>Dar a todos los usuarios del sistema privilegios de inserción y actualización sobre la tabla Tarea. ¿Cuál sería la diferencia si se incluye o no la cláusula WITH GRANT OPTION?</li>
+            <li>Retirar el privilegio de borrado sobre Institución a U1.</li>
+            <li>Quitar el privilegio de inserción a todos los usuarios sobre la tabla Tarea ¿Qué usuario podría entonces insertar datos en esa tabla?</li>
+            <li>Crear un rol <code>ins_prov</code> con capacidad de insertar datos de provincias y países.</li>
+            <li>Crear dos usuarios U3 y U4 y asignarles el rol <code>ins_prov</code>.</li>
+            <li>Permitir que los usuarios con el rol <code>ins_prov</code> puedan también actualizar el nombre del voluntario.</li>
+            <li>Eliminar el rol <code>ins_prov</code> ¿qué sucede con los usuarios U3 y U4?</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 3</h3>
+        <p>Suponga que el usuario A ha creado la tabla <code>Usuario(nro_u, nombre, tarea)</code> y luego ejecuta los siguientes comandos SQL:</p>
+        <pre><code class="language-sql">
+GRANT INSERT ON Usuario TO B WITH GRANT OPTION;
+GRANT SELECT ON Usuario TO B WITH GRANT OPTION;
+GRANT SELECT ON Usuario TO C;
+        </code></pre>
+        
+        <p>a) Indique quiénes pueden ejecutar exitosamente los siguientes comandos:</p>
+        <ol style="list-style-type: decimal;">
+            <li><code>SELECT * FROM A.Usuario WHERE nro_u='C';</code></li>
+            <li><code>INSERT INTO A.Usuario VALUES ('C', 'Gerente', ‘Control’);</code></li>
+            <li><code>GRANT SELECT ON A.Usuario TO D;</code></li>
+        </ol>
+
+        <p>b) Establezca la habilitación (o no) para realizar los siguientes comandos:</p>
+        <ol style="list-style-type: decimal;">
+            <li>B: <code>GRANT INSERT ON Usuario TO D;</code></li>
+            <li>A: <code>REVOKE INSERT ON Usuario FROM B CASCADE;</code></li>
+        </ol>
+        
+        <p>c) ¿Cuáles permisos conservan los usuarios después de lo anterior?</p>
+
+        <div class="schema-buttons">
+            <a href="/practice5" class="btn">&larr;</a>
+            <a href="/module6" target="_blank" class="btn">Teoria del Módulo 6</a>
+             <a href="/static/esq_instalacion.png" target="_blank" class="btn">Ver Esquema Instalación</a>
+        </div>
+
+    </div><script src="/static/script.js"></script>
+
+</body>
+</html>

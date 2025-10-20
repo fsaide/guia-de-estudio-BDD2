@@ -1,0 +1,108 @@
+/* Importar los estilos base para mantener la consistencia */
+@import url('style.css');
+
+/* Estilos específicos del Quiz */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    border-bottom: 2px solid var(--primary-color-light);
+    padding-bottom: 12px;
+    font-size: 1.8em;
+    color: var(--font-color-light);
+}
+body.dark-mode h2 {
+    border-bottom-color: var(--primary-color-dark);
+    color: var(--font-color-dark);
+}
+
+.quiz-question {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: var(--accent-bg-light);
+    border-left: 5px solid var(--primary-color-light);
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+}
+body.dark-mode .quiz-question {
+    background-color: var(--accent-bg-dark);
+    border-left-color: var(--primary-color-dark);
+}
+.quiz-question p {
+    font-weight: 600;
+    font-size: 1.1em;
+    margin: 0 0 15px 0;
+}
+.quiz-question label {
+    display: block;
+    margin-bottom: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 5px;
+    transition: background-color 0.2s;
+}
+.quiz-question label:hover {
+    background-color: var(--accent-hover-light);
+}
+body.dark-mode .quiz-question label:hover {
+    background-color: var(--accent-hover-dark);
+}
+.quiz-question label::before {
+    display: inline-block;
+    width: 25px;
+    font-weight: bold;
+    text-align: center;
+}
+
+#results {
+    margin-top: 30px;
+    padding: 20px;
+    font-size: 1.25em;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 8px;
+}
+.correct {
+    border-left-color: var(--success-color) !important;
+}
+.incorrect {
+    border-left-color: var(--danger-color) !important;
+}
+.correct label.user-answer::before {
+    content: '✓';
+    color: var(--success-color);
+}
+.incorrect label.user-answer::before {
+    content: '✗';
+    color: var(--danger-color);
+}
+
+.quiz-controls {
+    text-align: center;
+    margin-top: 20px;
+}
+
+code {
+    background-color: var(--accent-hover-light);
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-family: var(--font-code);
+    font-size: 0.95em;
+}
+body.dark-mode code {
+    background-color: var(--accent-hover-dark);
+}
+
+/* Sun icon for light mode */
+body:not(.dark-mode) .slider:before {
+    background-image: url('sun.svg');
+}
+
+/* Moon icon for dark mode */
+body.dark-mode .slider:before {
+    background-image: url('moon.svg');
+}

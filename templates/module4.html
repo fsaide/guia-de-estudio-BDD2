@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 4: SQL Procedural - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link">1. SQL</a>
+            <a href="/module2" class="nav-link">2. Restricciones</a>
+            <a href="/module3" class="nav-link">3. Vistas</a>
+            <a href="/module4" class="nav-link active">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link">5. Optimización</a>
+            <a href="/module6" class="nav-link">6. Seguridad</a>
+        </nav>
+    </div>
+    
+    <h2>Módulo 4: SQL Procedural y Triggers 🤖</h2>
+
+    <div class="module-content">
+        <p>Cuando la lógica de negocio o las restricciones de integridad son demasiado complejas para ser expresadas mediante SQL declarativo estándar (como `CHECK` o `FOREIGN KEY`), se recurre al <strong>SQL procedural</strong>. Este permite escribir bloques de código (similares a funciones en lenguajes de programación) que se almacenan y ejecutan en el servidor de base de datos.</p>
+        
+        <h4>Triggers (Disparadores)</h4>
+        <p>Un <strong>trigger</strong> es un tipo especial de procedimiento almacenado que se ejecuta <strong>automáticamente</strong> en respuesta a ciertos eventos DML (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) que ocurren en una tabla específica. Siguen el modelo <strong>Evento-Condición-Acción (ECA)</strong>:</p>
+        <ul>
+            <li><strong>Evento</strong>: La operación DML que activa el trigger (ej: `INSERT` en la tabla `Pedidos`).</li>
+            <li><strong>Condición</strong> (Opcional): Una expresión booleana que se evalúa antes de la acción. Si es verdadera, la acción se ejecuta; si es falsa, no. En PostgreSQL, esto se implementa con la cláusula `WHEN` en la definición del trigger.</li>
+            <li><strong>Acción</strong>: El bloque de código SQL procedural que se ejecuta cuando el evento ocurre y la condición (si existe) se cumple. En PostgreSQL, la acción se define en una función separada.</li>
+        </ul>
+
+        <p><strong>Componentes Clave de un Trigger en PostgreSQL:</strong></p>
+        <ul>
+            <li><strong>Tiempo de activación</strong>:
+                <ul>
+                    <li><code>BEFORE</code>: El código se ejecuta <strong>antes</strong> de que la operación DML se aplique a la fila. Es útil para validar o modificar los datos que se van a insertar/actualizar. La función debe retornar la fila (<code>NEW</code>) a insertar/actualizar, o <code>NULL</code> para cancelar la operación silenciosamente.</li>
+                    <li><code>AFTER</code>: El código se ejecuta <strong>después</strong> de que la operación DML se haya completado con éxito. Útil para acciones en cascada, auditoría o logging. La función debe retornar la fila original (<code>OLD</code> para <code>DELETE</code>, <code>NEW</code> para <code>INSERT</code>/<code>UPDATE</code>) o <code>NULL</code>.</li>
+                    <li><code>INSTEAD OF</code>: Se usa <strong>solo en vistas</strong>. El código del trigger reemplaza completamente la operación DML sobre la vista, permitiendo definir manualmente cómo actualizar las tablas base.</li>
+                </ul>
+            </li>
+            <li><strong>Evento</strong> : <code>INSERT</code>, <code>UPDATE [OF columna1, ...]</code>, <code>DELETE</code>, o <code>TRUNCATE</code>. Se pueden combinar múltiples eventos con <code>OR</code>.</li>
+            <li><strong>Granularidad</strong>:
+                <ul>
+                    <li><code>FOR EACH ROW</code>: El trigger se dispara una vez <strong>por cada fila</strong> afectada por la sentencia DML. Dentro de la función del trigger, se tiene acceso a las variables especiales <code>NEW</code> y <code>OLD</code>.</li>
+                    <li><code>FOR EACH STATEMENT</code>: El trigger se dispara <strong>una sola vez por sentencia</strong> DML, sin importar cuántas filas afecte. Las variables <code>NEW</code> y <code>OLD</code> no están disponibles.</li>
+                </ul>
+            </li>
+            <li><strong>Variables especiales (disponibles en triggers <code>FOR EACH ROW</code>)</strong>:
+                <ul>
+                    <li><b><code>NEW</code></b>: Un registro (tipo <code>RECORD</code>) que contiene la fila con los <strong>nuevos valores</strong> después de la operación. Disponible en <code>INSERT</code> y <code>UPDATE</code>. En un trigger <code>BEFORE</code>, se pueden modificar los valores de <code>NEW</code> antes de que se almacenen.</li>
+                    <li><b><code>OLD</code></b>: Un registro que contiene la fila con los <strong>valores antiguos</strong> antes de la operación. Disponible en <code>UPDATE</code> y <code>DELETE</code>.</li>
+                    <li><b><code>TG_OP</code></b>: Una variable de texto que indica la operación que disparó el trigger ('INSERT', 'UPDATE', 'DELETE'). Útil cuando un mismo trigger maneja múltiples eventos.</li>
+                    <li>Otras variables como <code>TG_TABLE_NAME</code>, <code>TG_WHEN</code>, <code>TG_LEVEL</code> proporcionan metadatos sobre la ejecución del trigger.</li>
+                </ul>
+            </li>
+        </ul>
+         <p><strong>Definición en PostgreSQL</strong>: Se realiza en dos pasos: 1) Crear una función que retorne el tipo <code>trigger</code> y contenga la lógica de la acción. 2) Crear el trigger asociándolo a una tabla, evento, tiempo y granularidad, especificando qué función ejecutar.</p>
+
+        <h4>Funciones (<code>FUNCTION</code>) y Procedimientos Almacenados (<code>PROCEDURE</code>)</h4>
+        <p>Son bloques de código SQL procedural (escritos en lenguajes como PL/pgSQL en PostgreSQL) que se almacenan en la base de datos y pueden ser invocados explícitamente.</p>
+        <ul>
+            <li><strong>Funciones (<code>FUNCTION</code>)</strong>:
+                <ul>
+                    <li>Aceptan parámetros de entrada.</li>
+                    <li><strong>Siempre devuelven un valor</strong> (un tipo simple, un registro, un conjunto de filas/tabla, etc.).</li>
+                    <li>Se invocan típicamente dentro de una consulta <code>SELECT</code> o en expresiones.</li>
+                    <li>En PostgreSQL, las acciones de los triggers se implementan obligatoriamente como funciones especiales que devuelven el tipo <code>trigger</code>.</li>
+                </ul>
+            </li>
+            <li><strong>Procedimientos Almacenados (<code>PROCEDURE</code>)</strong>:
+                <ul>
+                    <li>Aceptan parámetros de entrada, salida (<code>OUT</code>) o entrada/salida (<code>INOUT</code>).</li>
+                    <li><strong>No devuelven un valor</strong> directamente como las funciones. Los resultados se obtienen a través de parámetros <code>OUT</code>/<code>INOUT</code> o por modificaciones en las tablas.</li>
+                    <li>Se invocan con el comando <code>CALL</code>.</li>
+                    <li>Son adecuados para encapsular lógica de negocio compleja o tareas administrativas que no necesitan devolver un resultado directo.</li>
+                </ul>
+            </li>
+        </ul>
+                
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>Peligros y Consideraciones con Triggers:</strong></p>
+            <ul>
+                <li><strong>Cascadas de Triggers:</strong> Un trigger puede modificar datos en otra tabla, lo cual podría activar otro trigger, y así sucesivamente. Estas cascadas pueden volverse muy complejas de entender, depurar y mantener. Un diseño descuidado puede incluso llevar a recursiones infinitas si un trigger termina modificando la misma tabla que lo activó.</li>
+                <li><strong>Rendimiento:</strong> Los triggers, especialmente los <code>FOR EACH ROW</code>, añaden una sobrecarga a cada operación DML. Si la lógica dentro del trigger es compleja o realiza consultas adicionales, puede impactar significativamente el rendimiento, sobre todo en operaciones masivas (<code>UPDATE</code>/<code>DELETE</code> que afectan miles de filas). Es crucial que el código dentro de un trigger sea lo más eficiente posible.</li>
+                <li><strong>Orden de Ejecución:</strong> Si existen múltiples triggers para el mismo evento, tiempo y granularidad en una tabla, PostgreSQL los ejecuta en orden alfabético por nombre. Esto puede ser importante si la lógica depende de un orden específico.</li>
+                <li><strong>Transaccionalidad:</strong> Toda la operación DML original y todas las acciones realizadas por los triggers (<code>BEFORE</code> y <code>AFTER</code>) se ejecutan dentro de la misma transacción. Si algo falla en cualquier punto (incluyendo un error explícito como <code>RAISE EXCEPTION</code> dentro de un trigger), toda la transacción se revierte (rollback).</li>
+            </ul>
+        </div>
+        <div class="link-container">
+            <a href="/module3" class="btn">&larr;</a>
+            <a href="/quiz?module=4" target="_blank" class="btn">Quiz del Módulo 4</a>
+            <a href="/practice4" target="_blank" class="btn">Practica del Módulo 4</a>
+            <a href="/module5" class="btn">&rarr;</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 3</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+    <div class="container">
+
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link">practico 1</a>
+            <a href="/practice2" class="nav-link">practico 2</a>
+            <a href="/practice3" class="nav-link active">practico 3</a>
+            <a href="/practice4" class="nav-link">practico 4</a>
+            <a href="/practice5" class="nav-link">practico 5</a>
+            <a href="/practice6" class="nav-link">practico 6</a>
+        </nav>
+        </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 3</h1>
+            <h2>Acciones Procedurales en Bases de Datos</h2>
+            <p><i>Triggers, funciones y stored procedures</i></p>
+        </div>
+        
+        <div class="schema-buttons">
+            </div>
+
+        <h3>Ejercicio 1</h3>
+        <ol style="list-style-type: lower-latin;">
+            <li>Implemente mediante triggers en PostgreSQL los controles de los ejercicios 3a) y 3d) del Práctico 2. Previamente complete una tabla como la siguiente con los eventos críticos a controlar en cada caso.</li>
+        </ol>
+
+        <p>A modo de guía, dada la siguiente solución declarativa para el chequeo: <i>Cada proveedor sólo puede proveer productos a sucursales de su localidad</i></p>
+        <pre><code class="language-sql">
+CREATE ASSERTION chk_localidades CHECK (
+    NOT EXISTS (
+        SELECT 1
+        FROM proveedor p
+        JOIN provee pr ON (pr.nro_prov = p.nro_prov)
+        JOIN sucursal s ON (s.cod_suc = pr.cod_suc)
+        WHERE p.localidad <> s.localidad
+    )
+);
+        </code></pre>
+        <p>se deberían analizar cuáles son los eventos críticos que se requieren controlar y completar la tabla a continuación con los datos necesarios para completar la cabecera de el/los trigger/s requerido/s:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tabla / Evento</th>
+                        <th>Insert</th>
+                        <th>Update</th>
+                        <th>Delete</th>
+                        <th>Granularidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PROVEEDOR</strong></td>
+                        <td>no / si</td>
+                        <td>no / si (atributo/s)</td>
+                        <td>no / si</td>
+                        <td>f. e. row / statement</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PROVEE</strong></td>
+                        <td>no / si</td>
+                        <td>no / si (atributo/s)</td>
+                        <td>no / si</td>
+                        <td>f. e. row / statement</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SUCURSAL</strong></td>
+                        <td>no / si</td>
+                        <td>no / si (atributo/s)</td>
+                        <td>no / si</td>
+                        <td>f. e. row / statement</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <ol style="list-style-type: lower-latin;" start="2"> <li>Provea al menos 2 sentencias disparadoras para el/los trigger/s definidos (sobre distintas tablas y/o eventos) y chequee la respuesta del DBMS.</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 2</h3>
+        <p>Para las restricciones solicitadas en el ejercicio 4 del Práctico 2, determine los eventos críticos (puede orientarse mediante la tabla anterior) e implemente con triggers aquellos chequeos que no sea posible incorporar declarativamente en PostgreSQL.</p>
+
+        <hr>
+
+        <h3>Ejercicio 3</h3>
+        <p>Considere dos tablas <code>EMPLEADO_1</code> y <code>EMPLEADO_2</code> con atributos (id_empleado, nombre, apellido, sueldo) y que contienen las siguientes tuplas (Nota: se indican los valores de id_empleado y sueldo respectivamente):</p>
+        <p><code>EMPLEADO_1</code>: &lt;1,....,500&gt;</p>
+        <p><code>EMPLEADO_2</code>: &lt;2,...,700&gt;, &lt;3,....,300&gt;, &lt;4,....,700&gt;</p>
+        <p>Suponga que se define el siguiente trigger en PostgreSQL:</p>
+        <pre><code class="language-sql">
+CREATE OR REPLACE FUNCTION autoIncremento()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE empleado_1
+    SET sueldo = sueldo + (SELECT min(sueldo)*0.05 FROM empleado_1);
+    RETURN NEW; -- O OLD dependiendo del contexto, asumiendo NEW para INSERT
+END; $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_autoincremento
+BEFORE INSERT ON Empleado_1
+[ granularidad ] -- Placeholder for FOR EACH ROW or FOR EACH STATEMENT
+EXECUTE FUNCTION autoIncremento();
+        </code></pre>
+        <p>y que luego, por medio de la sentencia <code>INSERT INTO EMPLEADO_1 SELECT * FROM EMPLEADO_2;</code> se insertan en EMPLEADO_1 las tuplas que contiene EMPLEADO_2. Indique el estado final de la tabla EMPLEADO_1 si:</p>
+        <p>a) <code>[ granularidad ]</code> = <code>FOR EACH ROW</code> ;</p>
+        <p>b) <code>[ granularidad ]</code> = <code>FOR EACH STATEMENT</code>.</p>
+
+        <hr>
+
+        <h3>Ejercicio 4</h3>
+        <p>En el esquema de Películas, considere que se quiere mantener un registro de quién y cuánndo realizó actualizaciones sobre las entregas de películas. Cree una tabla <code>HIS_ENTREGA</code> que tenga por lo menos las siguientes columnas: <code>nro_registro</code>, fecha, operación, <code>cant_reg_afectados</code>, usuario.</p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Provea el/los trigger/s necesario/s para mantener actualizada en forma automática la tabla <code>HIS_ENTREGA</code> cuando se realizan actualizaciones (insert, update o delete) en la tabla ENTREGA o RENGLON_ENTREGA.</li>
+            <li>Determine el resultado en las tablas si se ejecuta la operación:
+                <pre><code>DELETE FROM ENTREGA WHERE id_video = 3582 ;</code></pre>
+                <p>seg&uacute;n el o los triggers definidos sean FOR EACH ROW o FOR EACH STATEMENT, eval&uacute;e la diferencia a partir de ambos tipos de granularidad.</p>
+            </li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 5</h3>
+        <p>En el esquema de Películas, se desea llevar otra tabla histórica en la cual conste, para cada EMPLEADO, el tiempo que ha permanecido en el sistema y el tiempo promedio en cada departamento.</p>
+        <p>Plantee los cambios necesarios en el esquema para contemplar ambos datos (mediante la/s sentencia/s SQL necesaria/s) y luego:</p>
+        <ul>
+            <li>Implemente este control mediante trigger/s.</li>
+            <li>Plantee un stored procedure que realice esta actualización.</li>
+            <li>¿Ambos enfoques garantizan tener actualizada en todo momento la información?</li>
+            <li>¿Qué ocurriría con la información pre-existente en la base de datos al momento de incorporar el trigger o procedimiento?</li>
+            <li>Analice si se podría implementar lo anterior mediante chequeos declarativos (de tabla o generales).</li>
+        </ul>
+
+        <hr>
+
+        <h3>Ejercicio 6</h3>
+        <p>Para el esquema Voluntarios, implemente un trigger que:</p>
+        <ol style="list-style-type: lower-latin;">
+            <li>ante un cambio de tarea de un voluntario, coloque en 0 la cantidad de horas aportadas, independientemente de si el valor de horas_aportadas de la sentencia update es diferente.</li>
+            <li>cuando se actualice la cantidad de horas aportadas, el nuevo valor no puede ser ni menor, ni superior al 10 % del valor que tenía anteriormente.</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 7</h3>
+        <p>Para el esquema del ejercicio 2 del Práctico 2, cree la siguiente tabla en la que se requiere llevar registro de la cantidad de textos publicados y la fecha de la última publicación, por cada autor:</p>
+        <p><code>TextosporAutor (autor, cant_textos, fecha_ultima_public)</code></p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Analice cuál sería el recurso procedural más apropiado para completar la información de esta tabla a partir de los datos ya existentes en la/s tabla/s, incluya la implementación completa y plantee un ejemplo de su utilización.</li>
+            <li>Defina el/los trigger/s que estime necesarios para mantener la base consistente cuando se produzcan actualizaciones sobre Articulo.</li>
+        </ol>
+        <div class="schema-buttons">
+            <a href="/practice2" class="btn">&larr;</a>
+            <a href="/module3" target="_blank" class="btn">Teoria del Módulo 3</a>
+            <a href="/practice4" class="btn">&rarr;</a>
+        </div>
+
+    </div><script src="/static/script.js"></script>
+
+</body>
+</html>

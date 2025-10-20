@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 4</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/practice-style.css">
+    
+</head>
+<body>
+
+    <div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+    <div class="container">
+
+        <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/practice1" class="nav-link">practico 1</a>
+            <a href="/practice2" class="nav-link">practico 2</a>
+            <a href="/practice3" class="nav-link">practico 3</a>
+            <a href="/practice4" class="nav-link active">practico 4</a>
+            <a href="/practice5" class="nav-link">practico 5</a>
+            <a href="/practice6" class="nav-link">practico 6</a>
+        </nav>
+        </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 4</h1>
+            <h2>Vistas</h2>
+        </div>
+        
+        <h3>Ejercicio 1</h3>
+        <p>Considere el siguiente DERExt (<a href="https://drive.google.com/file/d/1fG7_cdh0U5ncvP2ek7IsWYK2OprSZsGS/view?usp=sharing" target="_blank" class="link-especial">esq_articulos</a>):</p>
+        
+        <p>a) Defina las siguientes vistas mediante sentencias SQL:</p>
+        <ol style="list-style-type: lower-alpha;">
+            <li><code>ENVIOS500</code> con los envíos de 500 o más unidades (a partir de ENVIO).</li>
+            <li><code>ENVIOS500M</code> con los envíos de entre 500 y 1000 unidades (a partir de ENVIOS500).</li>
+            <li><code>RUBROS_PROV</code> con los diferentes rubros que poseen los proveedores ubicados en Tandil.</li>
+            <li><code>ENVIOS_PROV</code> con los diferentes id y nombre de proveedor y la cantidad total de unidades enviadas.</li>
+        </ol>
+
+        <p>b) Determine si las vistas anteriores son automáticamente actualizables según el estándar SQL o no (en este caso indicar la/s causa/s).</p>
+        <p>c) Compruebe si resultan automáticamente actualizables para PostgreSQL, proporcionando sentencias de actualización sobre las vistas en cada caso.</p>
+
+        <hr>
+
+        <h3>Ejercicio 2</h3>
+        <p>Considere el <a href="https://drive.google.com/file/d/1AQ-0Q4o58TEBMR1YR76MvwtXZJtxKqRM/view?usp=sharing" target="_blank" class="link-especial">esquema de Peliculas</a> (<code>unc_esq_peliculas</code>):</p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Escriba las sentencias de creación de las vistas solicitadas en cada caso.</li>
+            <li>Indique si para el estándar SQL dicha vista es actualizable o no. Justifique cada respuesta.</li>
+            <li>Ídem b) en PostgreSQL, teniendo en cuenta de construir vistas que resulten automáticamente actualizables, siempre que sea posible.</li>
+        </ol>
+
+        <ol style="list-style-type: decimal; margin-left: 20px;"> <li>Cree una vista <code>EMPLEADO_DIST_20</code> que liste el id_empleado, nombre, apellido, sueldo y fecha_nacimiento de los empleados que corresponden al distribuidor con identificador 20.</li>
+             <li>Sobre la vista anterior defina otra vista <code>EMPLEADO_DIST_2000</code> con el id, nombre, apellido y sueldo de los empleados con sueldo mayor a 2000.</li>
+             <li>Sobre la vista <code>EMPLEADO_DIST_20</code> cree la vista <code>EMPLEADO_DIST_20_70</code> con aquellos empleados que han nacido en la década del 70 (entre los años 1970 y 1979).</li>
+             <li>Cree una vista <code>PELICULAS_ENTREGADAS</code> que contenga el código de cada película y la cantidad de unidades entregadas.</li>
+             <li>Cree una vista <code>DISTRIB_NAC</code> con el id de las distribuidoras nacionales, nro_inscripcion y encargado, con distribuidor mayorista del país AR.</li>
+             <li>Usando la vista anterior, cree la vista <code>DISTRIB_NAC_MAS2EMP</code> con las distribuidoras nacionales cuyos departamentos tengan más de 2 empleados.</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 3</h3>
+        <p>A partir del Ejercicio 1:</p>
+        <p>a) ¿Qué sucedería con las actualizaciones sobre las vistas definidas si se agrega <code>WITH CHECK OPTION</code>?</p>
+        <p>b) Determine el efecto de las siguientes operaciones sobre la vista <code>Envios500</code>, según tenga especificada opción de chequeo (WITH CHECK OPTION) o no. (Nota: considere que existen los proveedores P1 y P2 y los artículos A1 y A2)</p>
+        <ol style="list-style-type: lower-alpha; counter-reset: list-alpha 3;"> <li><code>INSERT INTO ENVIOS500 VALUES ('P1', 'A1', 500);</code></li>
+            <li><code>INSERT INTO ENVIOS500 VALUES ('P2', 'A2', 300);</code></li>
+            <li><code>UPDATE ENVIOS500 SET cantidad=100 WHERE id_proveedor = 'P1';</code></li>
+            <li><code>UPDATE ENVIOS500 SET cantidad=1000 WHERE id_proveedor = 'P2';</code></li>
+            <li><code>INSERT INTO ENVIOS500 VALUES ('P1', 'A3', 700);</code></li>
+        </ol>
+        
+        <hr>
+
+        <h3>Ejercicio 4</h3>
+        <p>Dadas las siguientes vistas sobre el <a href="https://drive.google.com/file/d/1mCwfsnxLisKyChvDpgulaqYBKmtYN2R4/view?usp=sharing" target="_blank" class="link-especial">esquema de Voluntarios</a> (<code>unc_esq_voluntario</code>):</p>
+        <pre><code class="language-sql">
+CREATE OR REPLACE VIEW tarea10000hs AS
+SELECT * FROM tarea
+WHERE max_horas > 10000
+WITH LOCAL CHECK OPTION;
+
+CREATE OR REPLACE VIEW tarea10000rep AS
+SELECT * FROM tarea10000hs
+WHERE id_tarea LIKE '%REP%'
+WITH LOCAL CHECK OPTION;
+        </code></pre>
+        <p>a) ¿Cuál sería el resultado de las siguientes sentencias (ejecutadas en el orden dado)? Justifique.</p>
+        <ol style="list-style-type: decimal;">
+            <li><code>INSERT INTO tarea10000rep (id_tarea, nombre_tarea, min_horas, max_horas) VALUES ('MGR', 'Org Salud', 18000, 20000);</code></li>
+            <li><code>INSERT INTO tarea10000hs (id_tarea, nombre_tarea, min_horas, max_horas) VALUES ('REPA', 'Organiz Salud', 4000, 5500);</code></li>
+            <li><code>INSERT INTO tarea10000rep (id_tarea, nombre_tarea, min_horas, max_horas) VALUES ('CC_REP', 'Organizacion Salud', 8000, 9000);</code></li>
+            <li><code>INSERT INTO tarea10000hs (id_tarea, nombre_tarea, min_horas, max_horas) VALUES ('ROM', 'Org Salud', 10000, 12000);</code></li>
+        </ol>
+        <p>b) Luego de ejecutadas las sentencias anteriores, ¿en qué objetos de la BD aparecen insertadas las tuplas?</p>
+        <p>c) Ídem a) y b) pero considerando que <code>tarea10000hs</code> no tiene definida opción de chequeo.</p>
+
+        <hr>
+
+        <h3>Ejercicio 5</h3>
+        <p>Analice cuáles serían los controles y el comportamiento ante actualizaciones sobre las vistas <code>EMPLEADO_DIST_20</code>, <code>EMPLEADO_DIST_2000</code> y <code>EMPLEADO_DIST_20_70</code> creadas en el ej. 2, si las mismas están definidas con WITH CHECK OPTION, ya sea LOCAL o CASCADE. Evalúe diferentes alternativas.</p>
+
+        <hr>
+
+        <h3>Ejercicio 6</h3>
+        <p>Para las siguientes vistas de ensamble sobre el <a href="https://drive.google.com/file/d/1AQ-0Q4o58TEBMR1YR76MvwtXZJtxKqRM/view?usp=sharing" target="_blank" class="link-especial">esquema de Peliculas</a> (<code>unc_esq_peliculas</code>):</p>
+        <pre><code class="language-sql">
+CREATE VIEW ciudad_kp_2 AS
+SELECT id_ciudad, nombre_ciudad, c.id_pais, nombre_pais
+FROM ciudad c NATURAL JOIN pais p;
+
+CREATE VIEW entregas_kp_3 AS
+SELECT nro_entrega, re.codigo_pelicula, cantidad, titulo
+FROM renglon_entrega re JOIN pelicula p USING (codigo_pelicula);
+        </code></pre>
+        <ol style="list-style-type: lower-latin;">
+             <li>Indique en cada caso cuál es la clave preservada en la vista, de qué tabla proviene y qué atributos de la vista se pueden actualizar de acuerdo al estándar SQL.</li>
+             <li>Escriba la implementación completa de los triggers INSTEAD OF que considere adecuados para permitir actualizaciones en cada una de las vistas en PostgreSQL. Justifique.</li>
+             <li>Provea sentencias de actualización sobre cada vista e indique su propagación sobre las tablas base.</li>
+        </ol>
+        
+        <hr>
+
+        <h3>Ejercicio 7</h3>
+        <p>Sobre el <a href="https://drive.google.com/file/d/1mCwfsnxLisKyChvDpgulaqYBKmtYN2R4/view?usp=sharing" target="_blank" class="link-especial">esquema de Voluntarios</a>, defina una vista que contenga:</p>
+        <p><strong>Vista1</strong>: nro_voluntario, nombre, apellido, horas aportadas y datos completos de la tarea que realiza.</p>
+        <p><strong>Vista2</strong>: datos de las instituciones ubicadas en el país US junto con la cantidad de tareas que se han realizado en ellas.</p>
+        <p><strong>Vista3</strong>: identificador y nombre de todas las instituciones existentes, con la cantidad de voluntarios que están trabajando en cada una.</p>
+        <p>Para cada una de las vistas, determine si resulta automáticamente actualizable en PostgreSQL. Caso contrario, implemente en PostgreSQL los triggers INSTEAD OF necesarios para permitir actualizaciones sobre ellas que resulten razonables.</p>
+
+        <div class="schema-buttons">
+            <a href="/practice3" class="btn">&larr;</a>
+            <a href="/module4" target="_blank" class="btn">Teoria del Módulo 4</a>
+            <a href="/static/esq_envio.png" target="_blank" class="btn">Ver Esquema Envío (Ejercicio 1)</a>
+            <a href="/practice5" class="btn">&rarr;</a>
+        </div>
+
+    </div><script src="/static/script.js"></script>
+
+</body>
+</html>

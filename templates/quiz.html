@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/quiz-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <div class="quiz-header">
+        <a href="index.html" class="btn btn-secondary">← Volver al Inicio</a>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="checkbox">
+                <input type="checkbox" id="checkbox" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
+    
+    <h2>Cuestionario Aleatorio 🧠</h2>
+    <p>Se han generado 12 preguntas al azar (2 de cada tema). ¡Pon a prueba lo que aprendiste!</p>
+    
+    <form id="quiz-form">
+        </form>
+    
+    <div class="quiz-controls">
+        <button type="button" class="btn" onclick="submitQuiz()">Corregir Cuestionario</button>
+        <button type="button" class="btn btn-secondary" onclick="generateQuiz()">Generar Nuevo Cuestionario</button>
+    </div>
+    
+    <div id="results"></div>
+</div>
+
+<script src="/static/script.js"></script>
+
+</body>
+</html>

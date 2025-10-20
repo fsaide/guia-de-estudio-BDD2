@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 2: Restricciones - Bases de Datos 2</title>
+    <link rel="stylesheet" href="/static/module-style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container">
+    <div class="page-header">
+        <a href="/summary" class="btn btn-secondary">&larr;</a>
+        <nav class="module-nav">
+            <a href="/module1" class="nav-link">1. SQL</a>
+            <a href="/module2" class="nav-link active">2. Restricciones</a>
+            <a href="/module3" class="nav-link">3. Vistas</a>
+            <a href="/module4" class="nav-link">4. SQL Proc.</a>
+            <a href="/module5" class="nav-link">5. Optimización</a>
+            <a href="/module6" class="nav-link">6. Seguridad</a>
+        </nav>
+    </div>
+    
+    <h2>Módulo 2: Restricciones de Integridad ✅</h2>
+
+    <div class="module-content">
+        <p>Las Restricciones de Integridad (RI) son reglas cruciales que garantizan la validez, precisión y consistencia de los datos almacenados en la base de datos. El Sistema Gestor de Base de Datos (SGBD) es el encargado de impedir cualquier operación (<code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>) que intente violar estas reglas, asegurando que la base de datos permanezca en un estado consistente.</p>
+        
+        <h4>Clasificación de Restricciones de Integridad</h4>
+        <ul>
+            <li><strong>Por su Naturaleza</strong>:
+                <ul>
+                    <li><strong>Inherentes (Implícitas)</strong>: Son reglas fundamentales del propio modelo relacional, como la atomicidad de los atributos o la no existencia de tuplas duplicadas. No necesitan ser definidas explícitamente.</li>
+                    <li><strong>Explícitas</strong>: Se definen usando el Lenguaje de Definición de Datos (DDL) y forman parte del esquema. Incluyen restricciones de dominio, clave primaria, unicidad, no nulidad e integridad referencial.</li>
+                    <li><strong>Semánticas (Reglas de Negocio)</strong>: Reflejan lógica específica de la aplicación u organización. Pueden implementarse de forma declarativa (si el SGBD lo permite) o procedural (mediante triggers).</li>
+                </ul>
+            </li>
+            <li><strong>Según Estados Involucrados</strong>:
+                <ul>
+                    <li><strong>De Estado</strong>: Restringen los valores válidos de los datos en un momento dado. Ejemplos: unicidad de claves, nulidad, dominio de valores, cardinalidad y participación.</li>
+                    <li><strong>De Transición</strong>: Controlan cómo pueden cambiar los datos entre estados sucesivos. Requieren comparar el valor "anterior" y el "nuevo". No se pueden definir declarativamente, se implementan con triggers. (Ej: "El sueldo no puede disminuir").</li>
+                </ul>
+            </li>
+        </ul>
+
+        <h4>Tipos de Restricciones Declarativas en SQL</h4>
+        <ul>
+            <li><b><code>NOT NULL</code></b>: Asegura que una columna no puede contener el valor <code>NULL</code>.</li>
+            <li><b><code>UNIQUE</code></b>: Garantiza que todos los valores en una columna o conjunto de columnas sean distintos entre sí (aunque permite múltiples valores <code>NULL</code>, a diferencia de la PK).</li>
+            <li><b><code>PRIMARY KEY</code></b>: Identifica de forma única cada fila en una tabla. Es una combinación de <code>UNIQUE</code> y <code>NOT NULL</code>. Solo puede haber una por tabla.</li>
+            <li><b><code>FOREIGN KEY</code> (Integridad Referencial)</b>: Establece un vínculo entre dos tablas. Asegura que el valor (o conjunto de valores) en la columna de la tabla referenciante (la que tiene la FK) debe existir como valor de la clave primaria (o una clave candidata UNIQUE) en la tabla referenciada, o ser <code>NULL</code> si la columna FK lo permite.</li>
+            <li><b><code>CHECK</code></b>: Permite definir una condición booleana que debe ser verdadera (o desconocida por `NULL`) para cada fila de la tabla. Se usa para implementar restricciones de dominio o reglas más complejas que involucran varias columnas de la misma fila o incluso varias filas de la misma tabla.</li>
+            <li><b><code>ASSERTION</code></b>: Es una restricción general que no está asociada a una tabla específica y puede involucrar múltiples tablas. Define una condición que debe cumplirse para toda la base de datos. Su comprobación es costosa y no todos los SGBD la soportan.</li>
+        </ul>
+        
+        <h4>Integridad Referencial (<code>FOREIGN KEY</code>) en Detalle</h4>
+        <p>Define la relación entre una tabla "hija" (referenciante) y una tabla "padre" (referenciada).</p>
+        <ul>
+            <li><strong>Sintaxis</strong>: <code>FOREIGN KEY (col_hija1, ...) REFERENCES tabla_padre (col_padre1, ...)</code>.</li>
+            <li><strong>Acciones Referenciales</strong>: Definen qué sucede en la tabla hija cuando un registro referenciado en la tabla padre es eliminado (<code>ON DELETE</code>) o su clave es modificada (<code>ON UPDATE</code>). Las opciones son:
+                <ul>
+                    <li><b><code>NO ACTION</code> / <code>RESTRICT</code></b>: Impide la operación en la tabla padre si existen registros hijos que la referencian. Es el comportamiento por defecto en PostgreSQL y el estándar SQL. La diferencia sutil es cuándo se realiza la comprobación (RESTRICT antes, NO ACTION potencialmente al final de la transacción).</li>
+                    <li><b><code>CASCADE</code></b>: La operación (<code>DELETE</code> o <code>UPDATE</code>) se propaga desde la tabla padre a las filas relacionadas en la tabla hija.</li>
+                    <li><b><code>SET NULL</code></b>: El valor de la clave foránea en las filas hijas se establece en <code>NULL</code>. Requiere que la columna FK permita nulos.</li>
+                    <li><b><code>SET DEFAULT</code></b>: El valor de la clave foránea en las filas hijas se establece en su valor por defecto definido.</li>
+                </ul>
+            </li>
+            <li><strong>Tipos de Coincidencia (<code>MATCH</code>)</strong>: Relevante para claves foráneas compuestas que permiten nulos. Define cómo se manejan los valores `NULL` en la FK.
+                <ul>
+                    <li><code>MATCH SIMPLE</code> (Por defecto): Permite que cualquier componente de la FK sea `NULL`. Si ninguno es `NULL`, la combinación completa debe existir en la tabla padre.</li>
+                    <li><code>MATCH FULL</code>: Requiere que todos los componentes de la FK sean `NULL` o que todos sean no nulos y la combinación completa exista en la tabla padre. No permite combinaciones parciales de nulos y no nulos.</li>
+                    <li><code>MATCH PARTIAL</code>: Permite que algunos componentes sean `NULL`, pero los componentes no nulos deben coincidir con alguna fila en la tabla padre. (Menos común y no soportado por todos los SGBD).</li>
+                </ul>
+            </li>
+        </ul>
+        
+        <div class="additional-info">
+            <h4>Información Adicional Clave</h4>
+            <p><strong>Declarativo vs. Procedural (Triggers) para Restricciones:</strong></p>
+            <p>Siempre que sea posible, <strong>prefiere las restricciones declarativas</strong> (`CHECK`, `FOREIGN KEY`, etc.) sobre la lógica procedural en triggers. ¿Por qué? El SGBD está altamente optimizado para manejar restricciones declarativas de forma muy eficiente. Usar un trigger para una tarea que una `FOREIGN KEY` puede hacer es casi siempre más lento y propenso a errores. Los triggers deben reservarse para lógica de negocio compleja que no se puede expresar declarativamente (ej: auditoría, validaciones que dependen del estado anterior y nuevo, acciones reparadoras específicas).</p>
+            <p><strong>Impacto de Nulos en <code>CHECK</code>:</strong> Una condición <code>CHECK</code> se considera satisfecha si evalúa a <code>TRUE</code> o a <code>UNKNOWN</code> (desconocido, usualmente por la presencia de `NULL`). Solo se rechaza la operación si la condición evalúa explícitamente a <code>FALSE</code>. Esto es importante al diseñar condiciones que involucren columnas que puedan ser nulas.</p>
+        </div>
+        <div class="link-container">
+            <a href="/module1" class="btn">&larr;</a>
+            <a href="/quiz?module=2" target="_blank" class="btn">Quiz del Módulo 2</a>
+            <a href="/practice2" target="_blank" class="btn">Practica del Módulo 2</a>
+            <a href="/module3" class="btn">&rarr;</a>
+        </div>
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
