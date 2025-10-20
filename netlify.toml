@@ -3,7 +3,7 @@
 [build]
   # Netlify detecta automáticamente Go en 'netlify/functions'
   # pero especificarlo aquí es una buena práctica.
-  functions = "netlify/functions"
+  functions = "/"
 
 [build.environment]
   GO_VERSION = "1.22"
