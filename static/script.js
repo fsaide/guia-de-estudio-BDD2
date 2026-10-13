@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Evento para cambiar el tema
     if (themeToggle) {
+        themeToggle.setAttribute('aria-label', 'Cambiar tema de color');
         themeToggle.addEventListener('change', () => {
             document.body.classList.toggle('dark-mode');
             localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
@@ -28,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DEL CUESTIONARIO (Solo se ejecuta si estamos en la página del quiz) ---
     if (document.getElementById('quiz-form')) {
+        const quizForm = document.getElementById('quiz-form');
+        const resultsContainer = document.getElementById('results');
         
         const questionBank = {
             1: [ // Corresponds to module=1
@@ -84,8 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         window.generateQuiz = (module = null) => {
-            const quizForm = document.getElementById('quiz-form');
-            const resultsContainer = document.getElementById('results');
             const quizTitle = document.querySelector('.container h2');
             quizForm.innerHTML = '';
             resultsContainer.innerHTML = '';
@@ -94,51 +95,61 @@ document.addEventListener('DOMContentLoaded', () => {
             let questionsToGenerate = [];
 
             if (module && questionBank[module]) {
-                quizTitle.textContent = `Cuestionario del Módulo ${module} 🧠`;
+                quizTitle.textContent = `Cuestionario del módulo ${module}`;
                 const questions = [...questionBank[module]];
                 shuffleArray(questions);
                 questionsToGenerate = questions.slice(0, 5); // 5 questions for a specific module
+                document.getElementById('quiz-description').textContent = `${questionsToGenerate.length} preguntas sobre este tema.`;
             } else {
-                quizTitle.textContent = 'Cuestionario Aleatorio 🧠';
+                quizTitle.textContent = 'Cuestionario aleatorio';
                 for (const category in questionBank) {
                     const questions = [...questionBank[category]];
                     shuffleArray(questions);
                     questionsToGenerate.push(...questions.slice(0, 2)); // 2 questions from each category for the general quiz
                 }
                 shuffleArray(questionsToGenerate);
+                document.getElementById('quiz-description').textContent = `${questionsToGenerate.length} preguntas: dos de cada tema.`;
             }
 
             questionsToGenerate.forEach((questionData, index) => {
                 const questionId = `q_${index}`;
                 currentQuizAnswers[questionId] = questionData.correct;
 
-                const questionDiv = document.createElement('div');
+                const questionDiv = document.createElement('fieldset');
                 questionDiv.className = 'quiz-question';
                 questionDiv.id = `q_div_${questionId}`;
                 
                 let optionsHtml = '';
                 questionData.a.forEach((option, optionIndex) => {
-                    optionsHtml += `<label><input type="radio" name="${questionId}" value="${optionIndex}"> ${option}</label>`;
+                    const required = optionIndex === 0 ? 'required' : '';
+                    optionsHtml += `<label><input type="radio" name="${questionId}" value="${optionIndex}" ${required}> ${option}</label>`;
                 });
                 
-                questionDiv.innerHTML = `<p>${questionNumber}. ${questionData.q}</p>${optionsHtml}`;
+                questionDiv.innerHTML = `<legend>${questionNumber}. ${questionData.q}</legend>${optionsHtml}`;
                 quizForm.appendChild(questionDiv);
                 questionNumber++;
             });
         };
 
         window.submitQuiz = () => {
-            const resultsContainer = document.getElementById('results');
             let score = 0;
+            let firstUnansweredOption = null;
             
             for (const questionId in currentQuizAnswers) {
                 const radioButtons = document.getElementsByName(questionId);
                 const questionDiv = document.getElementById(`q_div_${questionId}`);
                 const userAnswerNode = Array.from(radioButtons).find(r => r.checked);
+                const feedbackId = `${questionId}-feedback`;
                 
                 questionDiv.querySelectorAll('label').forEach(label => label.classList.remove('user-answer'));
 
-                if (userAnswerNode) {
+                if (userAnswerNode && !radioButtons[0].validity.valueMissing) {
+                    radioButtons.forEach(radio => {
+                        radio.removeAttribute('aria-invalid');
+                        radio.removeAttribute('aria-describedby');
+                    });
+                    const feedback = questionDiv.querySelector('.quiz-feedback');
+                    if (feedback) feedback.remove();
                     userAnswerNode.parentElement.classList.add('user-answer');
                     const userAnswer = parseInt(userAnswerNode.value);
                     if (userAnswer === currentQuizAnswers[questionId]) {
@@ -150,16 +161,49 @@ document.addEventListener('DOMContentLoaded', () => {
                         questionDiv.classList.remove('correct');
                     }
                 } else {
+                    const feedback = questionDiv.querySelector('.quiz-feedback') || document.createElement('p');
+                    feedback.id = feedbackId;
+                    feedback.className = 'quiz-feedback';
+                    feedback.textContent = 'Te falta responder esta pregunta.';
+                    if (!feedback.parentElement) questionDiv.appendChild(feedback);
+                    radioButtons.forEach(radio => {
+                        radio.setAttribute('aria-invalid', 'true');
+                        radio.setAttribute('aria-describedby', feedbackId);
+                    });
+                    if (!firstUnansweredOption) firstUnansweredOption = radioButtons[0];
                     questionDiv.classList.add('incorrect');
                     questionDiv.classList.remove('correct');
                 }
             }
 
-            resultsContainer.innerHTML = `Tu puntaje es: ${score} de ${Object.keys(currentQuizAnswers).length} correctas.`;
+            resultsContainer.textContent = `Resultado: ${score} de ${Object.keys(currentQuizAnswers).length} respuestas correctas.`;
             if (score === Object.keys(currentQuizAnswers).length) {
-                resultsContainer.innerHTML += " ¡Excelente! 🎉";
+                resultsContainer.textContent += ' Todas correctas.';
             }
+            if (firstUnansweredOption) firstUnansweredOption.focus();
         };
+
+        quizForm.addEventListener('change', event => {
+            if (!(event.target instanceof HTMLInputElement) || event.target.type !== 'radio') return;
+
+            const questionDiv = event.target.closest('.quiz-question');
+            if (!questionDiv) return;
+
+            quizForm.querySelectorAll('.quiz-question.correct, .quiz-question.incorrect').forEach(question => {
+                question.classList.remove('incorrect', 'correct');
+            });
+            quizForm.querySelectorAll('label.user-answer').forEach(label => label.classList.remove('user-answer'));
+
+            const feedback = questionDiv.querySelector('.quiz-feedback');
+            if (feedback) feedback.remove();
+            questionDiv.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.removeAttribute('aria-invalid');
+                radio.removeAttribute('aria-describedby');
+            });
+            questionDiv.querySelectorAll('label').forEach(label => label.classList.remove('user-answer'));
+            questionDiv.classList.remove('incorrect', 'correct');
+            resultsContainer.textContent = '';
+        });
         
         // Generate the quiz based on the URL
         const module = getModuleFromURL();
