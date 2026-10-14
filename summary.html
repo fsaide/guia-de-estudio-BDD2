@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introducción - Bases de Datos 2</title>
+    <link rel="stylesheet" href="static/summary-style.css?v=5">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="theme-switch-wrapper">
+    <label class="theme-switch" for="checkbox">
+        <input type="checkbox" id="checkbox" />
+        <div class="slider round"></div>
+    </label>
+</div>
+
+<div class="container landing-shell">
+    <aside class="landing-sidebar" aria-label="Navegación contextual">
+        <div class="brand-block">
+            <span class="brand-kicker">Bases de Datos II</span>
+            <h1>Guía de estudio</h1>
+        </div>
+
+        <nav class="side-nav" aria-label="Secciones de la guía">
+            <a href="#overview">Resumen</a>
+            <a href="#modules">Módulos</a>
+            <a href="#practices">Prácticas</a>
+            <a href="#resources">Material extra</a>
+            <a href="quiz.html">Cuestionario</a>
+        </nav>
+
+    </aside>
+
+    <section class="summary-content" id="overview">
+        <div class="page-header page-header-inline">
+            <a href="index.html" class="btn btn-secondary">&larr;</a>
+            <div class="header-tag">Apuntes y prácticas</div>
+        </div>
+
+        <div class="hero-banner">
+            <div>
+                <p class="eyebrow">Curso académico</p>
+                <h2>Material completo de Bases de Datos II</h2>
+            </div>
+            <div class="hero-actions">
+                <a href="module1.html" class="btn">Ir al primer módulo</a>
+                <a href="quiz.html" class="btn btn-secondary">Practicar</a>
+            </div>
+        </div>
+
+        <p>Esta guía reúne siete temas del curso: consultas SQL, integridad relacional, SQL procedural, vistas, optimización, bases de datos post-relacionales y seguridad. El enfoque está orientado a dominar la teoría desde una base conceptual sólida y a reforzar la práctica con ejercicios sugeridos.</p>
+        <p>Durante la revisión, conviene distinguir entre la sintaxis de cada sentencia, la semántica del sistema y la lógica de negocio que debe preservarse en el diseño de un esquema relacional.</p>
+
+        <div class="info-strip">
+            <span>7 módulos</span>
+            <span>Prácticas guiadas</span>
+            <span>Cuestionario por nivel</span>
+        </div>
+
+        <div id="modules" class="module-grid">
+            <article class="module-card">
+                <span class="module-label">Módulo 1</span>
+                <h3>Consultas SQL</h3>
+                <p>Selección, filtrado, agregación, joins, subconsultas y operadores de conjunto.</p>
+                <div class="card-footer">
+                    <a href="module1.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/01-consultas-sql/BD2_01_Consultas_SQL.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card">
+                <span class="module-label">Módulo 2</span>
+                <h3>Integridad relacional</h3>
+                <p>Restricciones declarativas, claves, dependencias y reglas semánticas del modelo relacional.</p>
+                <div class="card-footer">
+                    <a href="module2.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/02-integridad-relacional/BD2_02_(Restricciones_declarativas)-2026.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card">
+                <span class="module-label">Módulo 3</span>
+                <h3>SQL procedural</h3>
+                <p>Funciones, procedimientos, triggers y lógica de automatización en el motor de base de datos.</p>
+                <div class="card-footer">
+                    <a href="module3.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/03-sql-procedural/BD2_03_(SQL_Procedural)_-_2026.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card">
+                <span class="module-label">Módulo 4</span>
+                <h3>Vistas</h3>
+                <p>Abstracción, encapsulación, seguridad lógica y actualización de vistas.</p>
+                <div class="card-footer">
+                    <a href="module4.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/04-vistas/BD2_04_(Vistas)_-_2026.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card">
+                <span class="module-label">Módulo 5</span>
+                <h3>Optimización</h3>
+                <p>Costos estimados, índices, planes de ejecución y análisis de consultas con EXPLAIN.</p>
+                <div class="card-footer">
+                    <a href="module5.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/05-optimizacion-consultas-e-indices/BD2_05_Optimizacion_2026.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card module-card-muted">
+                <span class="module-label">Módulo 6</span>
+                <h3>BD post-relacionales / NoSQL</h3>
+                <p>Modelos de datos NoSQL, MongoDB, CAP, consistencia y decisiones de diseño para escalabilidad.</p>
+                <div class="card-footer">
+                    <a href="module6.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_NoSQL_Completo_v3.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+
+            <article class="module-card module-card-muted">
+                <span class="module-label">Módulo 7</span>
+                <h3>Seguridad</h3>
+                <p>Privilegios, roles, control de acceso, GRANT/REVOKE y manejo seguro de la información.</p>
+                <div class="card-footer">
+                    <a href="module7.html">Abrir apuntes</a>
+                    <a href="static/base-de-datos-2/teoria/07-seguridad/BD2_07_Seguridad_y_control_de_acceso.pdf" target="_blank" rel="noreferrer">Descargar</a>
+                </div>
+            </article>
+        </div>
+
+        <div id="practices" class="practice-panel">
+            <h3>Prácticas por tema</h3>
+            <div class="practice-buttons">
+                <article class="practice-card">
+                    <a href="practice1.html" class="btn practice-btn">Práctico 1 · Módulo 1: SQL</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice2.html" class="btn practice-btn">Práctico 2 · Módulo 2: Restricciones</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice3.html" class="btn practice-btn">Práctico 3 · Módulo 3: SQL procedural</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice4.html" class="btn practice-btn">Práctico 4 · Módulo 4: Vistas</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice5.html" class="btn practice-btn">Práctico 5 · Módulo 5: Optimización</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice6.html" class="btn practice-btn">Práctico 6 · Módulo 6: NoSQL</a>
+                </article>
+                <article class="practice-card">
+                    <a href="practice7.html" class="btn practice-btn">Práctico 7 · Módulo 7: Seguridad</a>
+                </article>
+            </div>
+        </div>
+
+        <section id="resources" class="resources-panel">
+            <h3>Material complementario</h3>
+            <p>Esquemas y recursos adicionales organizados por tema, disponibles para consultar en una pestaña nueva.</p>
+
+            <div class="resource-group">
+                <h4>Esquemas y diagramas</h4>
+                <ul class="resource-list">
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_voluntario.png" target="_blank" rel="noreferrer">Esquema de voluntarios</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_pelicula.png" target="_blank" rel="noreferrer">Esquema de películas</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/RIR_servicio.png" target="_blank" rel="noreferrer">RIR de servicios</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_servicio.png" target="_blank" rel="noreferrer">Esquema de servicios</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_articulo.png" target="_blank" rel="noreferrer">Esquema de artículos</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_proveedor.png" target="_blank" rel="noreferrer">Esquema de proveedores</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_envio.png" target="_blank" rel="noreferrer">Esquema de envíos</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_empleado.png" target="_blank" rel="noreferrer">Esquema de empleados</a></li>
+                    <li><a href="static/base-de-datos-2/multimedia/esquemas/esq_instalacion.png" target="_blank" rel="noreferrer">Esquema de instalaciones</a></li>
+                </ul>
+            </div>
+
+            <div class="resource-group">
+                <h4>Apuntes adicionales</h4>
+                <ul class="resource-list">
+                    <li><a href="static/base-de-datos-2/teoria/01-consultas-sql/BD2_01_Consultas-resumen.pdf" target="_blank" rel="noreferrer">Resumen de consultas SQL</a></li>
+                    <li><a href="static/base-de-datos-2/teoria/01-consultas-sql/BD2_01_SQL_Avanzado_(ventanas)_-_2026.pdf" target="_blank" rel="noreferrer">SQL avanzado: funciones de ventana</a></li>
+                    <li><a href="static/base-de-datos-2/teoria/05-optimizacion-consultas-e-indices/BD2_05_Leer_un_EXPLAIN_ANALYZE_en_PostgreSQL.pdf" target="_blank" rel="noreferrer">Cómo leer EXPLAIN ANALYZE en PostgreSQL</a></li>
+                    <li><a href="static/base-de-datos-2/teoria/05-optimizacion-consultas-e-indices/BD2_05_Optimizacion_de_Consultas_e_indices_—_Apunte_de_estudio.pdf" target="_blank" rel="noreferrer">Apunte de optimización de consultas e índices</a></li>
+                    <li><a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_Mongodb - Conexión.pdf" target="_blank" rel="noreferrer">Conexión a MongoDB</a></li>
+                    <li><a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_Tutor IA - BD2 Clase 6 NoSQL.md" target="_blank" rel="noreferrer">Material complementario de NoSQL</a></li>
+                </ul>
+            </div>
+
+            <div class="resource-group">
+                <h4>Videos complementarios de integridad</h4>
+                <ul class="resource-list">
+                    <li><a href="https://drive.google.com/file/d/1Fok7W-hxV3JKU0Y_uARgXSVtqhHy8-Vh/view" target="_blank" rel="noreferrer">Matching de claves foráneas</a></li>
+                </ul>
+            </div>
+        </section>
+    </section>
+</div>
+
+<script src="static/script.js"></script>
+</body>
+</html>

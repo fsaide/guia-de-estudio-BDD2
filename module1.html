@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Módulo 1: Consultas SQL - Bases de Datos 2</title>
+    <link rel="stylesheet" href="static/module-style.css?v=8" />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body class="module-page dark-mode" data-default-theme="dark">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" checked />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="container module-shell">
+        <aside class="module-sidebar" aria-label="Navegación contextual">
+            <div class="module-brand">
+                <span class="eyebrow">Bases de Datos II</span>
+                <h3>Módulo 1: Consultas SQL</h3>
+            </div>
+            <p>La base del lenguaje relacional: recuperación, filtrado, agregación, joins y evaluación semántica.</p>
+            <nav class="module-toc" aria-label="Contenido del módulo">
+                <label>Secciones</label>
+                <ul>
+                    <li><a href="#intro">Introducción</a></li>
+<li><a href="#orden">Orden lógico de ejecución</a></li>
+<li><a href="#operadores">Cláusulas y operadores clave</a></li>
+<li><a href="#joins">Joins, subconsultas y operadores de conjunto</a></li>
+<li><a href="#good">Buenas prácticas</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="module-content-panel">
+            <div class="page-header">
+                <a href="summary.html" class="btn btn-secondary" aria-label="Volver al resumen">&larr;</a>
+                <nav class="module-nav" aria-label="Navegación principal del curso">
+                    <a href="module1.html" class="nav-link active">1. SQL</a>
+<a href="module2.html" class="nav-link">2. Restricciones</a>
+<a href="module3.html" class="nav-link">3. SQL Proc.</a>
+<a href="module4.html" class="nav-link">4. Vistas</a>
+<a href="module5.html" class="nav-link">5. Optimización</a>
+<a href="module6.html" class="nav-link">6. NoSQL</a>
+<a href="module7.html" class="nav-link">7. Seguridad</a>
+                </nav>
+            </div>
+
+            <div class="module-hero">
+                <div class="eyebrow">Apunte teórico</div>
+                <h2>Módulo 1: Consultas SQL</h2>
+                <p class="module-summary">La base del lenguaje relacional: recuperación, filtrado, agregación, joins y evaluación semántica.</p>
+                <div class="meta-badges">
+                    <span class="badge">Teoría completa</span>
+                    <span class="badge">Material de práctica</span>
+                    <span class="badge">Descarga directa</span>
+                </div>
+                <div class="module-actions">
+                    <a href="quiz.html?module=1" class="btn">Cuestionario</a>
+                    <a href="static/base-de-datos-2/teoria/01-consultas-sql/BD2_01_Consultas_SQL.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">PDF del módulo</a>
+                </div>
+            </div>
+
+            <div class="module-content">
+                <section id="intro"><h3>Introducción</h3><p>Una sentencia SQL no es solo una instrucción aislada: expresa un requerimiento sobre un conjunto de datos y debe interpretarse en términos de semántica relacional. La clave del módulo es comprender que la sintaxis ofrece un lenguaje formal para describir la intención del usuario, mientras que la semántica fija qué conjunto de filas resulta del cálculo.</p><p>El orden lógico de ejecución de una consulta permite distinguir claramente qué se evalúa primero, qué se agrupa y qué se proyecta finalmente. Esta lógica es central para detectar errores sutiles, especialmente al mezclar filtros, agregaciones, joins y subconsultas.</p></section>
+<section id="orden"><h3>Orden lógico de ejecución</h3><ol><li><strong>FROM</strong>: identifica las tablas de entrada y produce el conjunto base.</li><li><strong>WHERE</strong>: elimina filas según predicados sobre atributos individuales.</li><li><strong>GROUP BY</strong>: agrupa resultados en subconjuntos relevantes.</li><li><strong>HAVING</strong>: aplica condiciones sobre los grupos ya formados.</li><li><strong>SELECT</strong>: proyecta las columnas visibles o expresiones calculadas.</li><li><strong>ORDER BY</strong>: ordena el conjunto final.</li><li><strong>LIMIT / OFFSET</strong>: restringe la salida visible.</li></ol><p>Esta secuencia no es solo una conveniencia de lectura: refleja la forma en que un optimizador puede evaluar equivalencias semánticas y cómo una consulta bien escrita evita ambigüedades.</p></section>
+<section id="operadores"><h3>Cláusulas y operadores clave</h3><ul><li><strong>DISTINCT</strong>: elimina duplicados del conjunto resultante.</li><li><strong>LIKE</strong>: compara patrones usando % y _.</li><li><strong>BETWEEN</strong>: define rangos inclusivos.</li><li><strong>IS NULL / IS NOT NULL</strong>: permite evaluar la ausencia de valor sin ambigüedad.</li><li><strong>COUNT, SUM, AVG, MAX, MIN</strong>: funciones de agregación que operan sobre grupos o sobre el conjunto completo.</li></ul><p>Es importante recordar que NULL no es un valor comparable por igualdad: la comprobación debe hacerse con IS NULL o COALESCE, según el caso.</p></section>
+<section id="joins"><h3>Joins, subconsultas y operadores de conjunto</h3><p>Los joins permiten combinar datos de distintas tablas conservando la semántica de la relación. Un INNER JOIN devuelve solo las filas coincidentes; los joins externos preservan filas no coincidentes y rellenan con NULL. La decisión entre join interno o externo no es solo técnica: refleja la lógica de negocio que queremos preservar.</p><p>Las subconsultas dotan de expresividad a SQL; cuando se usan con EXISTS, IN, ANY y ALL, se evalúan condiciones sobre un conjunto sin materializar necesariamente el resultado de forma visible. Los operadores UNION, INTERSECT y EXCEPT permiten combinar consultas bajo una semántica algebraica precisa.</p></section>
+<section id="good"><h3>Buenas prácticas</h3><ul><li>Usar SELECT con columnas explícitas y evitar SELECT * en producción.</li><li>Preferir joins explícitos sobre combinaciones implícitas en WHERE.</li><li>Aplicar alias de tablas para mejorar la legibilidad.</li><li>Verificar índices en columnas de filtrado y orden y entender la diferencia entre costo estimado y costo real.</li></ul></section>
+                <section class="download-card">
+                    <div class="section-kicker">Descarga</div>
+                    <h3>Material completo del módulo</h3>
+                    <p>Incluye el apunte principal, recursos complementarios y la práctica asociada en un paquete estandarizado para estudio y revisión.</p>
+                    <div class="download-grid">
+                        <a href="static/base-de-datos-2/teoria/01-consultas-sql/BD2_01_Consultas_SQL.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">Abrir PDF</a>
+                        <a href="static/base-de-datos-2/recursos/modulos/module1.zip" class="btn">Descargar todo</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

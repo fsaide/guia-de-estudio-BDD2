@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bases de Datos 2 - Práctico 7</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="static/practice-style.css">
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="container">
+        <div class="page-header">
+            <a href="summary.html" class="btn btn-secondary">&larr;</a>
+            <nav class="module-nav">
+                <a href="practice1.html" class="nav-link">Práctico 1</a>
+                <a href="practice2.html" class="nav-link">Práctico 2</a>
+                <a href="practice3.html" class="nav-link">Práctico 3</a>
+                <a href="practice4.html" class="nav-link">Práctico 4</a>
+                <a href="practice5.html" class="nav-link">Práctico 5</a>
+                <a href="practice6.html" class="nav-link">Práctico 6</a>
+                <a href="practice7.html" class="nav-link active">Práctico 7</a>
+            </nav>
+        </div>
+
+        <div class="header-controls">
+            <h1>BASES DE DATOS 2 - Práctico 7</h1>
+            <h2>Seguridad en Base de Datos - Control de Acceso</h2>
+        </div>
+
+        <h3>Ejercicio 1</h3>
+        <p>Considere la siguiente fracción del esquema del usuario <code>db_instal</code> que registra datos de instalaciones a clientes:</p>
+        <pre><code class="language-sql">
+GRANT SELECT ON instalacion TO adm WITH GRANT OPTION;
+GRANT UPDATE ON instalacion TO adm WITH GRANT OPTION;
+GRANT DELETE ON instalacion TO adm;
+        </code></pre>
+        <p>Luego, el usuario <code>adm</code> ejecuta:</p>
+        <pre><code class="language-sql">
+GRANT SELECT ON instalacion TO doc;
+GRANT UPDATE(cantHoras, tarea) ON instalacion TO doc WITH GRANT OPTION;
+GRANT DELETE ON instalacion TO doc;
+        </code></pre>
+        <p>a) Realice el grafo de permisos correspondiente y analice qué sucede en cada caso.</p>
+        <p>b) Si el usuario <code>db_instal</code> ejecuta <code>REVOKE SELECT ON instalacion FROM adm CASCADE;</code>, ¿qué permisos conserva <code>doc</code>?</p>
+
+        <hr>
+
+        <h3>Ejercicio 2</h3>
+        <p>Suponga que el usuario U0 es administrador del sistema y quiere controlar el acceso a las tablas <code>Voluntario</code> e <code>Institucion</code>. Complete la sentencia SQL más apropiada para cada caso:</p>
+        <ol style="list-style-type: lower-latin;">
+            <li>Conceder a U1 todos los privilegios sobre <code>Institucion</code> con posibilidad de delegación.</li>
+            <li>Permitir que U2 solo consulte la tabla <code>Voluntario</code>.</li>
+            <li>Permitir que U2 autorice a U3 para insertar en <code>Voluntario</code>.</li>
+            <li>Retirar el privilegio de borrado sobre <code>Institucion</code> a U1.</li>
+            <li>Crear un rol <code>ins_prov</code> para insertar datos de provincias y países.</li>
+        </ol>
+
+        <hr>
+
+        <h3>Ejercicio 3</h3>
+        <p>Se tienen los usuarios A, B y C y la tabla <code>Usuario(nro_u, nombre, tarea)</code>. Si A ejecuta:</p>
+        <pre><code class="language-sql">
+GRANT INSERT ON Usuario TO B WITH GRANT OPTION;
+GRANT SELECT ON Usuario TO B WITH GRANT OPTION;
+GRANT SELECT ON Usuario TO C;
+        </code></pre>
+        <p>a) ¿Quién puede ejecutar <code>SELECT * FROM A.Usuario WHERE nro_u='C';</code>?</p>
+        <p>b) ¿Quién puede ejecutar <code>INSERT INTO A.Usuario VALUES ('C', 'Gerente', 'Control');</code>?</p>
+        <p>c) ¿Qué sucede si B intenta conceder permisos a D?</p>
+
+        <div class="schema-buttons">
+            <a href="practice6.html" class="btn">&larr;</a>
+            <a href="module7.html" target="_blank" class="btn">Teoría del Módulo 7</a>
+            <a href="static/base-de-datos-2/teoria/07-seguridad/BD2_07_Seguridad_y_control_de_acceso.pdf" target="_blank" class="btn">Ver PDF</a>
+        </div>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Módulo 7: Seguridad y control de acceso - Bases de Datos 2</title>
+    <link rel="stylesheet" href="static/module-style.css?v=8" />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body class="module-page dark-mode" data-default-theme="dark">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" checked />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="container module-shell">
+        <aside class="module-sidebar" aria-label="Navegación contextual">
+            <div class="module-brand">
+                <span class="eyebrow">Bases de Datos II</span>
+                <h3>Módulo 7: Seguridad y control de acceso</h3>
+            </div>
+            <p>Autorización, roles, privilegios, GRANT/REVOKE y prevención de accesos indebidos.</p>
+            <nav class="module-toc" aria-label="Contenido del módulo">
+                <label>Secciones</label>
+                <ul>
+                    <li><a href="#intro">Introducción</a></li>
+                    <li><a href="#privilegios">Privilegios y roles</a></li>
+                    <li><a href="#grant">GRANT y REVOKE</a></li>
+                    <li><a href="#vistas">Seguridad mediante vistas</a></li>
+                    <li><a href="#inyeccion">Inyección SQL</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="module-content-panel">
+            <div class="page-header">
+                <a href="summary.html" class="btn btn-secondary" aria-label="Volver al resumen">&larr;</a>
+                <nav class="module-nav" aria-label="Navegación principal del curso">
+                    <a href="module1.html" class="nav-link">1. SQL</a>
+                    <a href="module2.html" class="nav-link">2. Restricciones</a>
+                    <a href="module3.html" class="nav-link">3. SQL Proc.</a>
+                    <a href="module4.html" class="nav-link">4. Vistas</a>
+                    <a href="module5.html" class="nav-link">5. Optimización</a>
+                    <a href="module6.html" class="nav-link">6. NoSQL</a>
+                    <a href="module7.html" class="nav-link active">7. Seguridad</a>
+                </nav>
+            </div>
+
+            <div class="module-hero">
+                <div class="eyebrow">Apunte teórico</div>
+                <h2>Módulo 7: Seguridad y control de acceso</h2>
+                <p class="module-summary">La seguridad de la información exige controlar quién puede leer, escribir, modificar o administrar cada objeto del sistema, evitando la exposición innecesaria de datos y los accesos no autorizados.</p>
+                <div class="meta-badges">
+                    <span class="badge">Teoría completa</span>
+                    <span class="badge">Permisos</span>
+                    <span class="badge">Descarga directa</span>
+                </div>
+                <div class="module-actions">
+                    <a href="quiz.html?module=7" class="btn">Cuestionario</a>
+                    <a href="static/base-de-datos-2/teoria/07-seguridad/BD2_07_Seguridad_y_control_de_acceso.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">PDF del módulo</a>
+                </div>
+            </div>
+
+            <div class="module-content">
+                <section id="intro">
+                    <h3>Introducción</h3>
+                    <p>La seguridad en una base de datos no es un agregado opcional ni una capa superficial. Determina qué usuarios y roles pueden acceder a cada objeto, bajo qué condiciones, y qué tipo de operaciones pueden ejecutar. La política de seguridad debe seguir el principio de menor privilegio: cada usuario recibe únicamente el acceso necesario para cumplir su función.</p>
+                    <p>La administración de permisos es central para proteger la confidencialidad, la integridad y la disponibilidad de la información. Si los privilegios se conceden de forma indiscriminada, la base de datos queda expuesta a accesos no autorizados, manipulación accidental o pérdida de control administrativo.</p>
+                </section>
+
+                <section id="privilegios">
+                    <h3>Privilegios y roles</h3>
+                    <p>Se distinguen permisos sobre objetos y permisos sobre operaciones. Por ejemplo, un usuario puede tener derecho a consultar una tabla, insertar filas, modificar determinadas columnas o eliminar registros. Cuando se administran muchos usuarios con funciones similares, es conveniente agrupar esos permisos mediante roles.</p>
+                    <p>Un rol permite centralizar la política de acceso y simplificar la gestión. En lugar de asignar permisos directamente a cada persona, el administrador crea roles con funciones específicas y luego les asigna esos roles a los usuarios correspondientes.</p>
+                </section>
+
+                <section id="grant">
+                    <h3>GRANT y REVOKE</h3>
+                    <p>La asignación de permisos se realiza con <code>GRANT</code>, mientras que la retirada se hace con <code>REVOKE</code>. La sintaxis formal del estándar SQL define qué objeto recibe el permiso, qué privilegio se otorga y si el usuario beneficiario puede a su vez conceder ese privilegio a terceros.</p>
+                    <p>La cláusula <code>WITH GRANT OPTION</code> es importante porque modifica la capacidad de delegación: el receptor del privilegio puede posteriormente concederlo a otros usuarios. Esa funcionalidad debe analizarse con cuidado porque puede producir cascadas de permisos difíciles de gestionar y auditar.</p>
+                </section>
+
+                <section id="vistas">
+                    <h3>Seguridad mediante vistas</h3>
+                    <p>Las vistas son una herramienta muy útil para restringir el acceso directo a tablas completas. Se puede crear una vista que muestre solo columnas relevantes o filas autorizadas y conceder permisos sobre esa vista en lugar de sobre la tabla base. Esto ayuda a encapsular el esquema interno y evitar que un usuario vea información sensible o no requerida.</p>
+                    <p>Cuando la lógica de negocio exige ocultar información confidencial, una vista puede ser la capa adecuada de seguridad. La idea es que el usuario interactúe con los datos que necesita y no con la estructura completa del sistema.</p>
+                </section>
+
+                <section id="inyeccion">
+                    <h3>Inyección SQL</h3>
+                    <p>La seguridad de acceso no se agota en permisos del sistema. La inyección SQL aparece cuando una aplicación concatena cadenas ingresadas por el usuario dentro de una sentencia SQL sin validación ni parametrización adecuada. El atacante puede manipular la consulta e intentar leer, modificar o borrar datos.</p>
+                    <p>La prevención es clara: usar consultas parametrizadas, validar entradas, no confiar en información externa y diseñar la base como un entorno accesible solo a través de mecanismos controlados. La seguridad del diseño debe contemplar tanto la autorización del usuario como la protección del código de acceso a datos.</p>
+                </section>
+
+                <section class="video-block">
+                    <div class="section-kicker">BD2_07_Seguridad.mp4</div>
+                    <h3>Seguridad y control de acceso</h3>
+                    <iframe src="https://drive.google.com/file/d/1LhsWhaWjb0uZdf-Au8flWO3v5j5ZX1Gy/preview" title="Clase sobre seguridad y control de acceso" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+                    <p><a href="https://drive.google.com/file/d/1LhsWhaWjb0uZdf-Au8flWO3v5j5ZX1Gy/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p>
+                </section>
+
+                <section class="download-card">
+                    <div class="section-kicker">Descarga</div>
+                    <h3>Material completo del módulo</h3>
+                    <p>Descargá el apunte formal del módulo y la referencia teórica del curso para estudiar los permisos y la gestión segura del acceso.</p>
+                    <div class="download-grid">
+                        <a href="static/base-de-datos-2/teoria/07-seguridad/BD2_07_Seguridad_y_control_de_acceso.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">Abrir PDF</a>
+                        <a href="static/base-de-datos-2/teoria/07-seguridad/BD2_07_Seguridad_y_control_de_acceso.pdf" target="_blank" rel="noreferrer" class="btn">Descargar PDF</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

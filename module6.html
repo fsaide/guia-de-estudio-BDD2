@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Módulo 6: Bases de datos post-relacionales y NoSQL - Bases de Datos 2</title>
+    <link rel="stylesheet" href="static/module-style.css?v=8" />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body class="module-page dark-mode" data-default-theme="dark">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" checked />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="container module-shell">
+        <aside class="module-sidebar" aria-label="Navegación contextual">
+            <div class="module-brand">
+                <span class="eyebrow">Bases de Datos II</span>
+                <h3>Módulo 6: NoSQL y bases post-relacionales</h3>
+            </div>
+            <p>Introducción a los modelos NoSQL, su motivación, su semántica y su uso práctico con MongoDB.</p>
+            <nav class="module-toc" aria-label="Contenido del módulo">
+                <label>Secciones</label>
+                <ul>
+                    <li><a href="#intro">Introducción</a></li>
+                    <li><a href="#por-que">¿Por qué NoSQL?</a></li>
+                    <li><a href="#modelos">Modelos de datos</a></li>
+                    <li><a href="#cap">CAP y consistencia</a></li>
+                    <li><a href="#mongodb">MongoDB</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="module-content-panel">
+            <div class="page-header">
+                <a href="summary.html" class="btn btn-secondary" aria-label="Volver al resumen">&larr;</a>
+                <nav class="module-nav" aria-label="Navegación principal del curso">
+                    <a href="module1.html" class="nav-link">1. SQL</a>
+                    <a href="module2.html" class="nav-link">2. Restricciones</a>
+                    <a href="module3.html" class="nav-link">3. SQL Proc.</a>
+                    <a href="module4.html" class="nav-link">4. Vistas</a>
+                    <a href="module5.html" class="nav-link">5. Optimización</a>
+                    <a href="module6.html" class="nav-link active">6. NoSQL</a>
+                    <a href="module7.html" class="nav-link">7. Seguridad</a>
+                </nav>
+            </div>
+
+            <div class="module-hero">
+                <div class="eyebrow">Apunte teórico</div>
+                <h2>Módulo 6: Bases de datos post-relacionales y NoSQL</h2>
+                <p class="module-summary">NoSQL surge como respuesta a escalabilidad, volumen, variedad y disponibilidad; el objetivo no es reemplazar SQL, sino ampliar la gama de alternativas de almacenamiento y acceso.</p>
+                <div class="meta-badges">
+                    <span class="badge">Teoría completa</span>
+                    <span class="badge">MongoDB</span>
+                    <span class="badge">Descarga directa</span>
+                </div>
+                <div class="module-actions">
+                    <a href="quiz.html?module=6" class="btn">Cuestionario</a>
+                    <a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_NoSQL_Completo_v3.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">PDF del módulo</a>
+                </div>
+            </div>
+
+            <div class="module-content">
+                <section id="intro">
+                    <h3>Introducción</h3>
+                    <p>Las bases de datos relacionales resuelven muy bien la integridad, la estructura y las transacciones ACID, pero presentan límites cuando el problema exige alta escalabilidad horizontal, semiestructura flexible o procesamiento masivo de eventos. En ese contexto aparecen las bases NoSQL.</p>
+                    <p>La clase introduce NoSQL como una ampliación del panorama, no como una sustitución absoluta del modelo relacional. El criterio central es elegir el modelo según el patrón de acceso y la necesidad funcional, no por dogma.</p>
+                </section>
+
+                <section id="por-que">
+                    <h3>¿Por qué NoSQL?</h3>
+                    <p>Los sistemas modernos manejan volúmenes muy grandes de datos, velocidad de escritura relevante y variedad de formatos. Además, el servicio debe seguir disponible incluso ante fallas parciales del sistema o de la red.</p>
+                    <p>En ese escenario, NoSQL nace para atender escalabilidad y flexibilidad. La idea no es “romper” el modelo relacional, sino admitir alternativas cuando la estructura fija del esquema relacional resulta demasiado rígida o costosa para cierto tipo de aplicaciones.</p>
+                </section>
+
+                <section id="modelos">
+                    <h3>Modelos de datos</h3>
+                    <p>Los cuatro modelos más relevantes de la clase son: documentos, clave-valor, columna ancha y grafos. Cada uno sirve mejor a distintos patrones de consulta y acceso.</p>
+                    <ul>
+                        <li><strong>Documentos:</strong> adecuado cuando los datos se almacenan como estructuras JSON o similares y el acceso natural es por atributos dentro del documento.</li>
+                        <li><strong>Clave-valor:</strong> útil para almacenamiento simple y acceso directo por clave, con gran velocidad de lectura y escritura.</li>
+                        <li><strong>Columna ancha:</strong> pensado para consultas sobre un conjunto pequeño de atributos, especialmente en datasets muy grandes y distribuidos.</li>
+                        <li><strong>Grafos:</strong> ideal cuando la relación entre entidades es el centro del problema y las consultas recorren conexiones de forma intensiva.</li>
+                    </ul>
+                    <p>No existe un modelo “mejor” en general. Lo correcto es decidir en función de la forma en que se accede a los datos y del tipo de operación predominante.</p>
+                </section>
+
+                <section id="cap">
+                    <h3>CAP y consistencia</h3>
+                    <p>El teorema CAP expresa que, ante una partición de red, un sistema distribuido solo puede privilegiar dos de estas tres propiedades: consistencia, disponibilidad y tolerancia a particiones. En la práctica, esto fuerza decisiones de diseño.</p>
+                    <p>Por otra parte, ACID y BASE representan dos formas distintas de pensar la consistencia: mientras ACID prioriza rigor transaccional, BASE prioriza disponibilidad y tolerancia a fallas. La clase usa estas ideas para explicar por qué no todas las bases se comportan igual ante particiones o retrasos de sincronización.</p>
+                </section>
+
+                <section id="mongodb">
+                    <h3>MongoDB y la base documental</h3>
+                    <p>MongoDB es el caso más representativo de una base documental. En lugar de depender exclusivamente de tablas y relaciones, guarda documentos con estructuras similares a JSON. Esto permite representar jerarquías, listas, subdocumentos y datos semi-estructurados sin requerir un esquema rígido previo.</p>
+                    <p>En el modelo documental, la decisión entre embeber o referenciar es clave. Embeber suele ser útil cuando se quiere acceder a la información de un objeto en la misma operación y la estructura es naturalmente dependiente. Referenciar es útil cuando hay información compartida o cuando se quiere evitar duplicación y mantener consistencia en las relaciones. </p>
+                    <p>En MongoDB también se trabaja con agregaciones, filtros, proyecciones, índices y planes de ejecución. En ese sentido, la comparación con el optimizador relacional sigue siendo válida: no solo importa la sintaxis, sino también cómo se consulta y qué estructura se usa detrás.</p>
+                </section>
+
+                <section class="video-block">
+                    <div class="section-kicker">BD2_06_post_relaciones.mp4</div>
+                    <h3>Base de datos post-relacionales</h3>
+                    <iframe src="https://drive.google.com/file/d/19A99-pBKSXj25Q7ljXMG1j4SdW8sjhoo/preview" title="Clase sobre bases de datos post-relacionales" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+                    <p><a href="https://drive.google.com/file/d/19A99-pBKSXj25Q7ljXMG1j4SdW8sjhoo/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p>
+                </section>
+
+                <section class="download-card">
+                    <div class="section-kicker">Descarga</div>
+                    <h3>Material completo del módulo</h3>
+                    <p>Incluye el apunte del módulo, el material complementario y la referencia de la clase para repaso formal.</p>
+                    <div class="download-grid">
+                        <a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_NoSQL_Completo_v3.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">Abrir PDF</a>
+                        <a href="static/base-de-datos-2/teoria/06-bd-post-relacionales/BD2_06_Mongodb - Conexión.pdf" target="_blank" rel="noreferrer" class="btn">Abrir material complementario</a>
+                        <a href="static/base-de-datos-2/recursos/modulos/module6.zip" class="btn">Descargar todo</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

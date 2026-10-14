@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Módulo 3: SQL procedural y triggers - Bases de Datos 2</title>
+    <link rel="stylesheet" href="static/module-style.css?v=8" />
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+<body class="module-page dark-mode" data-default-theme="dark">
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" checked />
+            <div class="slider round"></div>
+        </label>
+    </div>
+
+    <div class="container module-shell">
+        <aside class="module-sidebar" aria-label="Navegación contextual">
+            <div class="module-brand">
+                <span class="eyebrow">Bases de Datos II</span>
+                <h3>Módulo 3: SQL procedural y triggers</h3>
+            </div>
+            <p>Automatización en la base de datos cuando la lógica excede la expresividad declarativa.</p>
+            <nav class="module-toc" aria-label="Contenido del módulo">
+                <label>Secciones</label>
+                <ul>
+                    <li><a href="#intro">Introducción</a></li>
+<li><a href="#trigger">Triggers</a></li>
+<li><a href="#funciones">Funciones y procedimientos</a></li>
+<li><a href="#consideraciones">Consideraciones de diseño</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="module-content-panel">
+            <div class="page-header">
+                <a href="summary.html" class="btn btn-secondary" aria-label="Volver al resumen">&larr;</a>
+                <nav class="module-nav" aria-label="Navegación principal del curso">
+                    <a href="module1.html" class="nav-link">1. SQL</a>
+<a href="module2.html" class="nav-link">2. Restricciones</a>
+<a href="module3.html" class="nav-link active">3. SQL Proc.</a>
+<a href="module4.html" class="nav-link">4. Vistas</a>
+<a href="module5.html" class="nav-link">5. Optimización</a>
+<a href="module6.html" class="nav-link">6. NoSQL</a>
+<a href="module7.html" class="nav-link">7. Seguridad</a>
+                </nav>
+            </div>
+
+            <div class="module-hero">
+                <div class="eyebrow">Apunte teórico</div>
+                <h2>Módulo 3: SQL procedural y triggers</h2>
+                <p class="module-summary">Automatización en la base de datos cuando la lógica excede la expresividad declarativa.</p>
+                <div class="meta-badges">
+                    <span class="badge">Teoría completa</span>
+                    <span class="badge">Material de práctica</span>
+                    <span class="badge">Descarga directa</span>
+                </div>
+                <div class="module-actions">
+                    <a href="quiz.html?module=3" class="btn">Cuestionario</a>
+                    <a href="static/base-de-datos-2/teoria/03-sql-procedural/BD2_03_(SQL_Procedural)_-_2026.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">PDF del módulo</a>
+                </div>
+            </div>
+
+            <div class="module-content">
+                <section id="intro"><h3>Introducción</h3><p>El SQL declarativo resuelve gran parte del trabajo, pero hay situaciones en las que la lógica depende del contexto, del evento o de una comparación entre valores previos y nuevos. En esas situaciones se recurre al SQL procedural y a los triggers.</p><p>Los triggers siguen el patrón ECA (Evento, Condición, Acción): ante un evento DML, el motor evalúa si se cumple una condición y ejecuta una acción. Son fundamentales para automatizar validaciones complejas y mantener invariantes de negocio dentro del servidor.</p></section>
+                <section id="trigger"><h3>Triggers</h3><p>Un trigger puede dispararse BEFORE, AFTER o INSTEAD OF, y puede actuar por fila o por sentencia. En PostgreSQL, la acción específica se implementa en una función que devuelve trigger, la cual tiene acceso a variables como NEW y OLD.</p><p>Esto permite inspeccionar el valor anterior y el nuevo, modificar datos antes de persistirlos o cancelar una operación si se viola una regla. La clave es que la lógica se ejecuta en el punto del cambio, no después de que la aplicación haya asumido que todo es válido.</p></section>
+                <section id="funciones"><h3>Funciones y procedimientos</h3><p>Las funciones devuelven un valor y pueden invocarse desde queries; los procedimientos encapsulan lógica más compleja y se invocan con CALL. Ambos permiten colocar la lógica del negocio cerca de los datos.</p><p>La decisión de usar una función o un procedimiento no es arbitraria: depende de si la operación debe producir un valor directo o simplemente ejecutar pasos sobre el estado de la base de datos.</p></section>
+                <section id="consideraciones"><h3>Consideraciones de diseño</h3><ul><li>Evitar triggers sobre-trigger innecesarios.</li><li>Usar restricciones declarativas cuando sea posible.</li><li>Documentar claramente las reglas y efectos colaterales.</li><li>Probar el comportamiento en cascada para evitar efectos ocultos.</li></ul></section>
+                <section class="video-block"><div class="section-kicker">BD2_03_Triggers_clase.mp4</div><h3>Lógica procedural y triggers</h3><iframe src="https://drive.google.com/file/d/1SZZKvceA7EiRYnD3yzCPD_4shqbjeEUG/preview" title="Video sobre lógica procedural y triggers" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><p><a href="https://drive.google.com/file/d/1SZZKvceA7EiRYnD3yzCPD_4shqbjeEUG/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p></section>
+                <section class="download-card">
+                    <div class="section-kicker">Descarga</div>
+                    <h3>Material completo del módulo</h3>
+                    <p>Incluye el apunte principal, recursos complementarios y la práctica asociada en un paquete estandarizado para estudio y revisión.</p>
+                    <div class="download-grid">
+                        <a href="static/base-de-datos-2/teoria/03-sql-procedural/BD2_03_(SQL_Procedural)_-_2026.pdf" target="_blank" rel="noreferrer" class="btn btn-secondary">Abrir PDF</a>
+                        <a href="static/base-de-datos-2/recursos/modulos/module3.zip" class="btn">Descargar todo</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>
