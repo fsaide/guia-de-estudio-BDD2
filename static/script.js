@@ -129,7 +129,8 @@
         if (downloadCard) {
             quickActions.appendChild(downloadCard);
             downloadCard.querySelectorAll('.download-grid a').forEach((link) => {
-                const format = link.href.toLowerCase().includes('.zip') ? 'ZIP' : 'PDF';
+                const fileName = new URL(link.href).pathname.split('/').pop() || '';
+                const format = fileName.split('.').pop().toUpperCase();
                 const size = document.createElement('small');
                 size.className = 'download-file-meta';
                 size.textContent = `${format} · Consultando tamaño`;

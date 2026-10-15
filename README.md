@@ -2,6 +2,8 @@
 
 Este sitio reúne apuntes y recursos para repasar los contenidos de la asignatura Bases de Datos II. Está pensado como una guía de consulta y práctica: cada tema incluye apuntes, ejercicios y, cuando corresponde, material complementario.
 
+Dentro de cada módulo y práctico hay botones con títulos legibles que indican el tema del material, sin mostrar los prefijos técnicos de los nombres de archivo. Los documentos se abren en el navegador y los paquetes ZIP se descargan.
+
 ## Contenidos
 
 La guía está organizada en siete módulos. Cada práctico tiene el mismo número que el módulo al que corresponde:
