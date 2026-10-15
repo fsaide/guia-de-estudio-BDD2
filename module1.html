@@ -64,11 +64,65 @@
             </div>
 
             <div class="module-content">
-                <section id="intro"><h3>Introducción</h3><p>Una sentencia SQL no es solo una instrucción aislada: expresa un requerimiento sobre un conjunto de datos y debe interpretarse en términos de semántica relacional. La clave del módulo es comprender que la sintaxis ofrece un lenguaje formal para describir la intención del usuario, mientras que la semántica fija qué conjunto de filas resulta del cálculo.</p><p>El orden lógico de ejecución de una consulta permite distinguir claramente qué se evalúa primero, qué se agrupa y qué se proyecta finalmente. Esta lógica es central para detectar errores sutiles, especialmente al mezclar filtros, agregaciones, joins y subconsultas.</p></section>
-<section id="orden"><h3>Orden lógico de ejecución</h3><ol><li><strong>FROM</strong>: identifica las tablas de entrada y produce el conjunto base.</li><li><strong>WHERE</strong>: elimina filas según predicados sobre atributos individuales.</li><li><strong>GROUP BY</strong>: agrupa resultados en subconjuntos relevantes.</li><li><strong>HAVING</strong>: aplica condiciones sobre los grupos ya formados.</li><li><strong>SELECT</strong>: proyecta las columnas visibles o expresiones calculadas.</li><li><strong>ORDER BY</strong>: ordena el conjunto final.</li><li><strong>LIMIT / OFFSET</strong>: restringe la salida visible.</li></ol><p>Esta secuencia no es solo una conveniencia de lectura: refleja la forma en que un optimizador puede evaluar equivalencias semánticas y cómo una consulta bien escrita evita ambigüedades.</p></section>
-<section id="operadores"><h3>Cláusulas y operadores clave</h3><ul><li><strong>DISTINCT</strong>: elimina duplicados del conjunto resultante.</li><li><strong>LIKE</strong>: compara patrones usando % y _.</li><li><strong>BETWEEN</strong>: define rangos inclusivos.</li><li><strong>IS NULL / IS NOT NULL</strong>: permite evaluar la ausencia de valor sin ambigüedad.</li><li><strong>COUNT, SUM, AVG, MAX, MIN</strong>: funciones de agregación que operan sobre grupos o sobre el conjunto completo.</li></ul><p>Es importante recordar que NULL no es un valor comparable por igualdad: la comprobación debe hacerse con IS NULL o COALESCE, según el caso.</p></section>
-<section id="joins"><h3>Joins, subconsultas y operadores de conjunto</h3><p>Los joins permiten combinar datos de distintas tablas conservando la semántica de la relación. Un INNER JOIN devuelve solo las filas coincidentes; los joins externos preservan filas no coincidentes y rellenan con NULL. La decisión entre join interno o externo no es solo técnica: refleja la lógica de negocio que queremos preservar.</p><p>Las subconsultas dotan de expresividad a SQL; cuando se usan con EXISTS, IN, ANY y ALL, se evalúan condiciones sobre un conjunto sin materializar necesariamente el resultado de forma visible. Los operadores UNION, INTERSECT y EXCEPT permiten combinar consultas bajo una semántica algebraica precisa.</p></section>
-<section id="good"><h3>Buenas prácticas</h3><ul><li>Usar SELECT con columnas explícitas y evitar SELECT * en producción.</li><li>Preferir joins explícitos sobre combinaciones implícitas en WHERE.</li><li>Aplicar alias de tablas para mejorar la legibilidad.</li><li>Verificar índices en columnas de filtrado y orden y entender la diferencia entre costo estimado y costo real.</li></ul></section>
+                <section id="intro">
+                    <h3>Introducción: consultas como expresiones relacionales</h3>
+                    <p>Una consulta SQL describe el resultado requerido y no prescribe, en general, el algoritmo físico para obtenerlo. El estándar combina operaciones sobre conjuntos o multiconjuntos de filas: selección (filtrado), proyección (elección de atributos), combinación, agrupación y ordenamiento. El optimizador puede transformar la expresión en otra equivalente y escoger accesos físicos distintos, siempre que conserve la semántica observable.</p>
+                    <p>Las tablas SQL normalmente tienen semántica de multiconjunto: dos filas con los mismos valores pueden aparecer más de una vez. <code>DISTINCT</code> cambia explícitamente esa semántica al eliminar duplicados, lo que puede requerir ordenar o construir una estructura de hashing. El orden de las filas no está definido sin <code>ORDER BY</code>; un plan que hoy devuelve un orden aparente no constituye garantía.</p>
+                    <p>Los costos concretos dependen del plan y el almacenamiento, no solo de la notación SQL: ordenar n filas suele costar O(n log n), mientras que agrupación/deduplicación por hashing tiene costo esperado O(n) y memoria O(n). Ambas estrategias pueden desbordar memoria y usar almacenamiento temporal. Un índice compatible puede evitar un ordenamiento, pero mantenerlo también cuesta en escrituras.</p>
+                    <p>La forma general de una consulta de selección es <code>SELECT [DISTINCT] expresiones FROM fuentes WHERE predicado GROUP BY claves HAVING predicado_de_grupo ORDER BY expresiones LIMIT cantidad OFFSET desplazamiento</code>. Cada cláusula tiene restricciones de alcance: por ejemplo, <code>WHERE</code> filtra filas de entrada y no puede filtrar directamente un agregado calculado después de agrupar.</p>
+                </section>
+                <section id="orden">
+                    <h3>Orden lógico de evaluación y alcance</h3>
+                    <p>El orden lógico explica la visibilidad de nombres y los resultados, aunque no obliga al motor a ejecutar físicamente cada paso en ese orden. Conceptualmente se construyen las fuentes de <code>FROM</code> y sus joins; <code>WHERE</code> descarta filas; <code>GROUP BY</code> forma grupos; <code>HAVING</code> descarta grupos; <code>SELECT</code> calcula las expresiones de salida; <code>DISTINCT</code> elimina duplicados; <code>ORDER BY</code> ordena y, finalmente, <code>OFFSET</code>/<code>LIMIT</code> restringen el resultado.</p>
+                    <p>En PostgreSQL, los nombres definidos en la lista de <code>SELECT</code> no están disponibles en <code>WHERE</code>, porque este se evalúa lógicamente antes. El alias suele estar disponible en <code>ORDER BY</code>. El orden físico elegido por el optimizador puede adelantar filtros o cambiar el orden de joins si demuestra que el resultado es equivalente.</p>
+                    <pre><code>SELECT d.nombre, COUNT(*) AS cantidad
+FROM departamento AS d
+JOIN empleado AS e ON e.departamento_id = d.id
+WHERE e.activo
+GROUP BY d.id, d.nombre
+HAVING COUNT(*) &gt;= 5
+ORDER BY cantidad DESC, d.nombre;</code></pre>
+                    <p>El predicado sobre <code>e.activo</code> selecciona filas antes de agrupar. La condición sobre la cantidad se evalúa después de formar cada grupo. El segundo criterio de orden resuelve empates para que la salida sea determinista.</p>
+                </section>
+                <section id="operadores">
+                    <h3>Predicados, NULL, agregación y ventanas</h3>
+                    <h4>Lógica de predicados y valores ausentes</h4>
+                    <p>SQL usa lógica de tres valores: un predicado puede ser TRUE, FALSE o UNKNOWN. Las comparaciones ordinarias con <code>NULL</code> producen UNKNOWN; por ello <code>columna = NULL</code> no encuentra las filas nulas. Se usa <code>IS NULL</code>, <code>IS NOT NULL</code> o, cuando la regla pide comparar nulos como equivalentes, <code>IS NOT DISTINCT FROM</code>. En un <code>WHERE</code> solo sobreviven las filas cuyo predicado sea TRUE. <code>NOT UNKNOWN</code> sigue siendo UNKNOWN, detalle que afecta expresiones con <code>NOT IN</code>.</p>
+                    <p><code>BETWEEN a AND b</code> incluye ambos extremos; <code>LIKE</code> interpreta <code>%</code> como cualquier secuencia y <code>_</code> como un carácter, con reglas de escape y collation dependientes del motor. <code>IN</code> expresa pertenencia; con elementos nulos puede dar UNKNOWN. <code>EXISTS</code> comprueba si la subconsulta produce al menos una fila y es la forma segura para muchas búsquedas de existencia.</p>
+                    <h4>Agregados y agrupación</h4>
+                    <p><code>GROUP BY</code> particiona las filas por igualdad de las claves agrupadas. Cada grupo produce una fila de salida; las expresiones seleccionadas deben estar agrupadas, ser agregados o depender funcionalmente de las claves según las reglas del motor. <code>COUNT(*)</code> cuenta filas; <code>COUNT(col)</code> omite valores NULL; <code>SUM</code>, <code>AVG</code>, <code>MIN</code> y <code>MAX</code> también ignoran NULL y devuelven NULL si no hay valores aplicables. <code>COALESCE</code> permite especificar un valor sustituto explícito.</p>
+                    <h4>Funciones de ventana</h4>
+                    <p>Una función de ventana calcula sobre un marco de filas relacionadas sin colapsar el detalle como lo hace <code>GROUP BY</code>. La sintaxis es <code>funcion(...) OVER ([PARTITION BY ...] [ORDER BY ...] [ROWS|RANGE|GROUPS ...])</code>. <code>PARTITION BY</code> define grupos independientes; <code>ORDER BY</code> define la secuencia dentro de cada grupo; el marco determina qué filas participan en el cálculo de la fila actual.</p>
+                    <pre><code>SELECT empleado_id, departamento_id, salario,
+       RANK() OVER (
+           PARTITION BY departamento_id
+           ORDER BY salario DESC
+       ) AS puesto,
+       AVG(salario) OVER (
+           PARTITION BY departamento_id
+       ) AS promedio_departamental
+FROM empleado;</code></pre>
+                    <p><code>ROW_NUMBER</code> asigna números únicos; <code>RANK</code> deja huecos tras empates y <code>DENSE_RANK</code> no los deja. <code>LAG</code>/<code>LEAD</code> consultan filas vecinas y <code>SUM(...) OVER (... ORDER BY ... ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)</code> calcula acumulados. Si el marco no se especifica, los valores por defecto con ordenamiento pueden producir acumulados por pares de empate; definir <code>ROWS</code> explícitamente evita ambigüedad cuando se requiere una fila física a la vez.</p>
+                </section>
+                <section id="joins">
+                    <h3>Joins, subconsultas, CTE y operadores de conjunto</h3>
+                    <p><code>INNER JOIN</code> conserva solo pares que satisfacen la condición; <code>LEFT</code>, <code>RIGHT</code> y <code>FULL OUTER JOIN</code> preservan además las filas no coincidentes de uno o ambos lados y completan con NULL las columnas faltantes. <code>CROSS JOIN</code> genera el producto cartesiano: con entradas de tamaños m y n puede producir m×n filas. La condición de unión expresa la relación lógica y debe escribirse en <code>ON</code>; los filtros que deben conservar las filas sin pareja se colocan cuidadosamente, pues moverlos a <code>WHERE</code> puede convertir en la práctica un outer join en inner join.</p>
+                    <p>Una subconsulta escalar debe producir como máximo un valor; una subconsulta tabular puede usarse con <code>IN</code>, <code>ANY</code>, <code>ALL</code> o <code>EXISTS</code>. Una subconsulta correlacionada refiere columnas de la consulta externa y tiene semántica por fila, aunque el optimizador puede transformarla en semi-join o anti-join. Para expresar “no existe”, <code>NOT EXISTS</code> evita la trampa de UNKNOWN de <code>NOT IN</code> cuando el conjunto contiene NULL.</p>
+                    <p>Los operadores de conjuntos exigen igual cantidad de columnas y tipos compatibles por posición. <code>UNION</code> elimina duplicados; <code>UNION ALL</code> los conserva; <code>INTERSECT</code> devuelve la intersección y <code>EXCEPT</code> la diferencia. La deduplicación implica trabajo adicional. Una CTE (<code>WITH</code>) asigna nombre a una subconsulta para hacer legible y modular el cálculo; una CTE recursiva usa una parte inicial y otra recursiva unidas con <code>UNION ALL</code> para recorrer jerarquías o grafos. Su materialización o inlineado depende del motor y las opciones usadas, por lo que no se debe asumir que siempre materializa.</p>
+                    <pre><code>WITH RECURSIVE organigrama(id, jefe_id, nivel) AS (
+    SELECT id, jefe_id, 0 FROM empleado WHERE id = 10
+    UNION ALL
+    SELECT e.id, e.jefe_id, o.nivel + 1
+    FROM empleado AS e
+    JOIN organigrama AS o ON e.jefe_id = o.id
+)
+SELECT id, jefe_id, nivel FROM organigrama ORDER BY nivel, id;</code></pre>
+                </section>
+                <section id="good">
+                    <h3>Construcción correcta y lectura pragmática</h3>
+                    <p>Use alias explícitos, califique columnas ambiguas y liste las columnas necesarias. Defina un orden total cuando el consumidor dependa de paginación: <code>ORDER BY fecha, id</code> es estable si <code>id</code> desempata. <code>LIMIT/OFFSET</code> con desplazamientos grandes puede obligar a recorrer y descartar muchas filas; la paginación por clave (keyset) evita ese costo cuando el orden tiene claves estables.</p>
+                    <p>Verifique la cardinalidad prevista de los joins: una relación uno-a-muchos multiplica filas, por lo que sumar una medida del lado “uno” tras unir sin controlar la cardinalidad puede duplicar el total. Use una agregación previa o una consulta de existencia cuando la intención sea filtrar y no combinar columnas. Compare planes con <code>EXPLAIN (ANALYZE, BUFFERS)</code> en el módulo de optimización; las consultas correctas deben primero preservar el significado del dato y luego optimizarse.</p>
+                </section>
                 <section class="download-card">
                     <div class="section-kicker">Descarga</div>
                     <h3>Material completo del módulo</h3>

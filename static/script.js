@@ -1,4 +1,6 @@
 ﻿document.addEventListener('DOMContentLoaded', () => {
+    localStorage.removeItem('studyGuideViewedModules');
+
     const themeToggle = document.getElementById('checkbox');
 
     const applyTheme = () => {
@@ -33,14 +35,6 @@
             label: link.textContent.trim()
         }));
         const currentModuleName = activeModuleLink.textContent.trim().replace(/^\d+\.\s*/, '');
-        const viewedModulesStorageKey = 'studyGuideViewedModules';
-        const storedViewedModules = JSON.parse(localStorage.getItem(viewedModulesStorageKey) || '[]');
-        const viewedModules = Array.isArray(storedViewedModules) ? storedViewedModules : [];
-
-        if (currentModule && !viewedModules.includes(currentModule)) {
-            viewedModules.push(currentModule);
-            localStorage.setItem(viewedModulesStorageKey, JSON.stringify(viewedModules));
-        }
 
         const breadcrumb = document.createElement('nav');
         breadcrumb.className = 'module-breadcrumb';
@@ -50,24 +44,16 @@
 
         const moduleIndex = document.createElement('details');
         moduleIndex.className = 'module-index';
-        moduleIndex.open = window.innerWidth > 760;
         moduleIndex.innerHTML = '<summary>Temario del curso</summary>';
         const moduleIndexList = document.createElement('ul');
 
-        moduleNames.forEach((module, index) => {
-            const moduleNumber = index + 1;
+        moduleNames.forEach((module) => {
             const item = document.createElement('li');
             const link = document.createElement('a');
-            const status = document.createElement('span');
             link.href = module.href;
             link.textContent = module.label;
-            status.className = 'module-status';
-            const isViewed = viewedModules.includes(moduleNumber);
-            status.classList.toggle('is-viewed', isViewed);
-            status.textContent = isViewed ? '✓ Visto' : '○ Pendiente';
-            status.setAttribute('aria-label', status.textContent);
-            item.classList.toggle('is-current', moduleNumber === currentModule);
-            item.append(link, status);
+            item.classList.toggle('is-current', module.href === activeModuleLink.getAttribute('href'));
+            item.append(link);
             moduleIndexList.appendChild(item);
         });
 
@@ -78,21 +64,12 @@
         if (sectionNav) {
             const sectionIndex = document.createElement('details');
             sectionIndex.className = 'section-index';
-            sectionIndex.open = window.innerWidth > 760;
             const summary = document.createElement('summary');
             summary.textContent = 'En este apunte';
             sectionIndex.appendChild(summary);
             sectionNav.replaceWith(sectionIndex);
             sectionIndex.appendChild(sectionNav);
         }
-
-        const progressPanel = document.createElement('section');
-        progressPanel.className = 'module-progress';
-        progressPanel.setAttribute('aria-label', 'Progreso de módulos visitados');
-        const viewedCount = viewedModules.length;
-        const progressPercentage = Math.round((viewedCount / moduleNames.length) * 100);
-        progressPanel.innerHTML = `<div class="module-progress-label"><span>Módulos visitados</span><strong>${viewedCount}/${moduleNames.length}</strong></div><div class="module-progress-track" role="progressbar" aria-label="Módulos visitados" aria-valuemin="0" aria-valuemax="${moduleNames.length}" aria-valuenow="${viewedCount}"><span style="width: ${progressPercentage}%"></span></div>`;
-        moduleSidebar.appendChild(progressPanel);
 
         const moduleActions = moduleMain.querySelector('.module-actions');
         const quickActions = document.createElement('aside');
@@ -189,13 +166,16 @@
 
         const videoBlocks = moduleMain.querySelectorAll('.video-block');
         videoBlocks.forEach((videoBlock) => {
-            const video = videoBlock.querySelector('video');
-            if (!video) return;
+            const player = videoBlock.querySelector('video, iframe');
+            if (!player) return;
 
             const metadata = document.createElement('p');
             metadata.className = 'video-metadata';
-            metadata.textContent = 'Video del módulo';
-            videoBlock.insertBefore(metadata, video);
+            const video = player instanceof HTMLVideoElement ? player : null;
+            metadata.textContent = video ? 'Video del módulo' : 'Video del módulo · Google Drive';
+            videoBlock.insertBefore(metadata, player);
+            if (!video) return;
+
             video.addEventListener('loadedmetadata', () => {
                 if (Number.isFinite(video.duration)) {
                     const minutes = Math.floor(video.duration / 60);

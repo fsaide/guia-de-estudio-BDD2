@@ -64,11 +64,58 @@
             </div>
 
             <div class="module-content">
-                <section id="intro"><h3>Introducción</h3><p>Las restricciones de integridad definen el conjunto de estados que un esquema relacional puede admitir. Son el mecanismo mediante el cual el sistema evita que los datos representen una realidad imposible, inconsistente o ambiguamente interpretada.</p><p>El diseño correcto combina restricciones declarativas con reglas de negocio que pueden requerir lógica procedural. La diferencia clave es que una regla declarativa se valida por el motor de base de datos de manera uniforme, mientras que una regla de transición exige comparar el estado anterior y el nuevo valor antes de aceptar el cambio.</p></section>
-<section id="tipos"><h3>Tipos de restricciones</h3><ul><li><strong>NOT NULL</strong>: impide valores faltantes donde el dominio requiere información.</li><li><strong>UNIQUE</strong>: garantiza unicidad en columnas o grupos de columnas.</li><li><strong>PRIMARY KEY</strong>: identifica cada fila con unicidad y no nulidad.</li><li><strong>FOREIGN KEY</strong>: exige que la relación referencial exista en la tabla padre.</li><li><strong>CHECK</strong>: valida condiciones booleanas sobre filas o registros.</li><li><strong>ASSERTION</strong>: regla global que involucra múltiples tablas.</li></ul></section>
-<section id="referencial"><h3>Integridad referencial</h3><p>Una llave foránea no es solo una restricción técnica: representa una obligación semántica entre dos entidades. Si una fila padre se elimina o actualiza, la base de datos debe decidir cómo responder con ON DELETE y ON UPDATE.</p><p>Las opciones CASCADE, RESTRICT, SET NULL y SET DEFAULT reflejan decisiones de negocio distintas. En un modelo bien diseñado, la opción elegida debe ser coherente con la semántica del dominio y con la historia que se quiere preservar.</p></section>
-<section id="transicion"><h3>Restricciones de transición</h3><p>Las reglas de transición dependen del cambio entre estados. Por ejemplo, “el sueldo no puede disminuir” o “el stock no puede quedar negativo sin una compensación explícita” no son verificables con una sola fila aislada, sino con el valor anterior y el nuevo valor.</p><p>Estas reglas suelen implementarse con triggers o lógica procedural porque requieren observación del contexto y del evento. Cuando la regla puede expresarse declarativamente, la solución es más robusta y más fácil de mantener.</p></section>
-<section id="recomendacion"><h3>Recomendación práctica</h3><ul><li>Usar restricciones declarativas siempre que la regla correspondiente se pueda expresar en DDL.</li><li>Reservar triggers para aspectos dinámicos o de negocio que involucren contexto previo.</li><li>Diseñar con consistencia y semántica, no solo con “que la base no falle”.</li></ul></section>
+                <section id="intro">
+                    <h3>Fundamento formal de las restricciones</h3>
+                    <p>Sea un esquema relacional R y sea I una instancia posible de sus relaciones. Una restricción de integridad C define qué instancias son admisibles: I es válida si y solo si I satisface C. Toda transacción debe transformar una instancia válida en otra válida al llegar al punto de comprobación. La base de datos ejecuta esa comprobación dentro de la operación transaccional; si falla, se rechaza la sentencia o la transacción según el momento de evaluación, evitando que una aplicación pueda omitir la regla.</p>
+                    <p>Las restricciones describen invariantes, no secuencias de pasos. Preferir la forma declarativa permite al optimizador y al motor conocer la regla, mantenerla en cargas masivas y escrituras concurrentes, y reportar de forma uniforme la violación. La lógica procedural se reserva para reglas que dependen de una transición, de agregados entre filas o de acciones que no se pueden representar con constraints nativas.</p>
+                </section>
+                <section id="tipos">
+                    <h3>Restricciones de dominio, fila y clave</h3>
+                    <p><code>NOT NULL</code> exige presencia; <code>CHECK</code> exige que una expresión booleana no sea FALSE. En PostgreSQL, un CHECK que evalúa UNKNOWN por NULL se considera satisfecho: por tanto, <code>CHECK (edad &gt;= 18)</code> no reemplaza a <code>NOT NULL</code> si la edad es obligatoria. El constraint se comprueba al insertar o actualizar la fila afectada.</p>
+                    <p><code>UNIQUE</code> exige que los valores de una columna o combinación no se repitan. En PostgreSQL, por defecto los NULL no se consideran iguales para UNIQUE, así que pueden existir múltiples NULL; versiones recientes permiten expresar <code>NULLS NOT DISTINCT</code>. Una clave primaria equivale a identificación única y no nula; una tabla tiene una sola primary key, aunque puede tener varias claves candidatas mediante UNIQUE.</p>
+                    <p>Las claves compuestas representan unicidad del conjunto ordenado de atributos, no la unicidad individual de cada componente. Los nombres explícitos de constraints facilitan migraciones y diagnósticos.</p>
+                    <pre><code>CREATE TABLE departamento (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre text NOT NULL UNIQUE
+);
+
+CREATE TABLE empleado (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    departamento_id bigint NOT NULL,
+    correo text NOT NULL,
+    salario numeric(12, 2) NOT NULL,
+    activo boolean NOT NULL DEFAULT true,
+    CONSTRAINT empleado_salario_no_negativo CHECK (salario &gt;= 0),
+    CONSTRAINT empleado_correo_unico UNIQUE (correo),
+    CONSTRAINT empleado_departamento_fk
+        FOREIGN KEY (departamento_id) REFERENCES departamento(id)
+);</code></pre>
+                    <p><code>DEFAULT</code> solo aporta un valor cuando se omite la columna o se solicita DEFAULT; no prohíbe NULL ni reemplaza NOT NULL. Un CHECK opera normalmente sobre la fila actual y no debe usarse para consultar otras filas: el motor no garantiza que una condición interfilas escrita así se mantenga ante escrituras concurrentes.</p>
+                    <p>Una constraint local como NOT NULL o CHECK se comprueba al procesar cada fila afectada, por lo que su trabajo es normalmente proporcional al número de filas modificadas. UNIQUE y PRIMARY KEY requieren detectar duplicados; PostgreSQL mantiene un índice único, con búsqueda típica O(log n) por fila y costo adicional de espacio, WAL y mantenimiento. Las referencias requieren localizar claves padre y al modificar/borrar un padre también identificar hijas; indexar la columna de la foreign key evita a menudo un recorrido completo de la tabla hija.</p>
+                </section>
+                <section id="referencial">
+                    <h3>Integridad referencial y acciones referenciales</h3>
+                    <p>Una foreign key de una tabla hija a una clave primaria o UNIQUE de una tabla padre requiere que cada valor no nulo de la referencia coincida con una fila padre. Para una referencia opcional, NULL expresa que no existe asociación; en una referencia obligatoria se agrega NOT NULL. Una foreign key compuesta con MATCH SIMPLE (predeterminado) no exige coincidencia si algún componente es NULL; MATCH FULL permite todos NULL o todos no nulos, no una mezcla.</p>
+                    <p>Las acciones determinan el efecto de cambiar o borrar una fila referenciada: <code>NO ACTION</code> comprueba la regla en el momento de validación y puede diferirse; <code>RESTRICT</code> impide la operación inmediatamente; <code>CASCADE</code> propaga actualización o borrado a hijas; <code>SET NULL</code> o <code>SET DEFAULT</code> sustituyen los valores, siempre que el resultado satisfaga el resto de constraints. Cascadas pueden atravesar varias tablas y causar efectos extensos dentro de la misma transacción; deben reflejar dependencia semántica real, no ser un atajo de limpieza.</p>
+                    <p>En PostgreSQL, las foreign keys se verifican mediante mecanismos internos de integridad y bloqueos que coordinan transacciones concurrentes. Un índice en las columnas hijas no es creado automáticamente por la foreign key, pero suele ser necesario para localizar eficientemente las filas afectadas al borrar o actualizar al padre.</p>
+                    <pre><code>ALTER TABLE empleado
+    ADD CONSTRAINT empleado_departamento_fk
+    FOREIGN KEY (departamento_id)
+    REFERENCES departamento(id)
+    ON UPDATE CASCADE
+    ON DELETE RESTRICT;</code></pre>
+                </section>
+                <section id="transicion">
+                    <h3>Restricciones diferibles, globales y de transición</h3>
+                    <p>Algunas reglas solo pueden comprobarse cuando una operación compuesta termina. PostgreSQL permite declarar ciertos constraints como <code>DEFERRABLE INITIALLY IMMEDIATE</code> o <code>INITIALLY DEFERRED</code>; con <code>SET CONSTRAINTS ... DEFERRED</code> se pospone la comprobación hasta el final de la transacción. CHECK no es diferible en PostgreSQL; UNIQUE, PRIMARY KEY y FOREIGN KEY sí pueden serlo si se declaran DEFERRABLE, con limitaciones específicas. Las restricciones diferibles no pueden servir como objetivo de ciertas cláusulas <code>ON CONFLICT</code>.</p>
+                    <p>El estándar SQL contempla <code>ASSERTION</code> para invariantes globales que pueden involucrar varias tablas, pero PostgreSQL no implementa CREATE ASSERTION. Si una regla global es realmente necesaria, hay que diseñarla con cuidado: restricciones únicas, exclusion constraints, modelado que haga la condición local, o triggers con bloqueo/aislamiento adecuado. Un trigger que solo consulta “si existe” y luego inserta puede sufrir una carrera: dos transacciones pueden observar que la condición se cumple y violarla simultáneamente. Debe usarse una constraint nativa, bloquear una clave común, o serializar/gestionar conflictos transaccionales de forma explícita.</p>
+                    <p>Las reglas de transición comparan el estado anterior y el nuevo, por ejemplo “un saldo no puede disminuir” o “el estado solo puede avanzar por transiciones permitidas”. Un CHECK puede imponer el rango actual del saldo, pero no el historial de cambio; se requiere trigger o registrar cada transición. En un trigger de fila, <code>OLD</code> contiene la fila anterior y <code>NEW</code> la propuesta nueva.</p>
+                </section>
+                <section id="recomendacion">
+                    <h3>Selección del mecanismo y diagnóstico</h3>
+                    <p>Modele cada regla primero como predicado: ¿atañe a un valor, a una fila, a la unicidad entre filas, a una referencia, al conjunto global o al paso entre dos estados? Use respectivamente NOT NULL/DEFAULT, CHECK, UNIQUE/EXCLUDE, FOREIGN KEY, una constraint global nativa o una solución transaccional procedural. Las constraints deben llevar nombres estables y probarse tanto en inserciones como en modificaciones, borrados, cargas masivas y escrituras simultáneas.</p>
+                    <p>Una violación aborta la sentencia o puede dejar la transacción en estado de error hasta hacer ROLLBACK o SAVEPOINT recovery. No se debe ocultar el error en la aplicación y continuar como si se hubiera persistido el dato. Mantenga la validación en la base aunque la interfaz también valide: la interfaz mejora la experiencia, pero no controla todos los clientes ni las carreras entre procesos.</p>
+                </section>
                 <section class="video-block"><div class="section-kicker">BD2_02_RI_Declarativas.mp4</div><h3>Integridad relacional</h3><iframe src="https://drive.google.com/file/d/1T5uPgu-z34NJ-MQRz0forzJ0JFj8-Isc/preview" title="Video sobre integridad relacional" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><p><a href="https://drive.google.com/file/d/1T5uPgu-z34NJ-MQRz0forzJ0JFj8-Isc/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p></section>
                 <section class="download-card">
                     <div class="section-kicker">Descarga</div>

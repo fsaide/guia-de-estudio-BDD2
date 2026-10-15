@@ -63,10 +63,63 @@
             </div>
 
             <div class="module-content">
-                <section id="intro"><h3>Introducción</h3><p>El SQL declarativo resuelve gran parte del trabajo, pero hay situaciones en las que la lógica depende del contexto, del evento o de una comparación entre valores previos y nuevos. En esas situaciones se recurre al SQL procedural y a los triggers.</p><p>Los triggers siguen el patrón ECA (Evento, Condición, Acción): ante un evento DML, el motor evalúa si se cumple una condición y ejecuta una acción. Son fundamentales para automatizar validaciones complejas y mantener invariantes de negocio dentro del servidor.</p></section>
-                <section id="trigger"><h3>Triggers</h3><p>Un trigger puede dispararse BEFORE, AFTER o INSTEAD OF, y puede actuar por fila o por sentencia. En PostgreSQL, la acción específica se implementa en una función que devuelve trigger, la cual tiene acceso a variables como NEW y OLD.</p><p>Esto permite inspeccionar el valor anterior y el nuevo, modificar datos antes de persistirlos o cancelar una operación si se viola una regla. La clave es que la lógica se ejecuta en el punto del cambio, no después de que la aplicación haya asumido que todo es válido.</p></section>
-                <section id="funciones"><h3>Funciones y procedimientos</h3><p>Las funciones devuelven un valor y pueden invocarse desde queries; los procedimientos encapsulan lógica más compleja y se invocan con CALL. Ambos permiten colocar la lógica del negocio cerca de los datos.</p><p>La decisión de usar una función o un procedimiento no es arbitraria: depende de si la operación debe producir un valor directo o simplemente ejecutar pasos sobre el estado de la base de datos.</p></section>
-                <section id="consideraciones"><h3>Consideraciones de diseño</h3><ul><li>Evitar triggers sobre-trigger innecesarios.</li><li>Usar restricciones declarativas cuando sea posible.</li><li>Documentar claramente las reglas y efectos colaterales.</li><li>Probar el comportamiento en cascada para evitar efectos ocultos.</li></ul></section>
+                <section id="intro">
+                    <h3>SQL declarativo y procedural</h3>
+                    <p>El SQL declarativo especifica qué relación debe obtenerse o qué cambio se solicita. Un lenguaje procedural permite expresar una secuencia de instrucciones, variables, condiciones, iteraciones y manejo de errores. En PostgreSQL, PL/pgSQL integra esa lógica con SQL: se usa para funciones, procedimientos y funciones de trigger.</p>
+                    <p>La lógica del servidor se ejecuta cerca de los datos y puede evitar múltiples viajes de red, centralizar reglas compartidas por distintos clientes y realizar operaciones atómicas dentro de una transacción. A cambio, aumenta el acoplamiento al motor, puede ocultar efectos laterales y añade trabajo a la ruta de escritura. Una constraint declarativa sigue siendo preferible cuando expresa completamente la regla: el motor puede optimizarla y hacerla cumplir incluso ante concurrencia.</p>
+                    <p>El patrón ECA describe un trigger: un Evento (INSERT, UPDATE, DELETE o TRUNCATE), una Condición opcional y una Acción. La acción ocurre como parte de la misma transacción que originó el evento; si falla y no se captura, también falla la operación que disparó el trigger.</p>
+                </section>
+                <section id="trigger">
+                    <h3>Triggers: momento, granularidad y ejecución</h3>
+                    <p>PostgreSQL separa la función del trigger de su asociación con una tabla. La función se declara <code>RETURNS trigger</code>; el trigger determina los eventos y cuándo llamarla. <code>BEFORE</code> permite modificar <code>NEW</code> antes de almacenar una fila o devolver NULL para omitirla; <code>AFTER</code> observa el cambio ya aplicado lógicamente y es adecuado para auditoría o efectos transaccionales derivados; <code>INSTEAD OF</code> sustituye la operación sobre una vista. Los triggers sobre tablas no admiten INSTEAD OF.</p>
+                    <p><code>FOR EACH ROW</code> invoca la función una vez por fila afectada; <code>FOR EACH STATEMENT</code> una vez por sentencia, incluso si afecta cero filas. En triggers de fila, <code>OLD</code> representa la versión anterior y <code>NEW</code> la propuesta nueva; su disponibilidad depende del evento: INSERT tiene NEW, DELETE tiene OLD y UPDATE tiene ambos. En triggers de sentencia no existen estas filas individuales; PostgreSQL puede exponer tablas de transición para determinados triggers AFTER, lo que permite procesar en conjunto todas las filas de la sentencia.</p>
+                    <pre><code>CREATE OR REPLACE FUNCTION normalizar_correo()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.correo := lower(trim(NEW.correo));
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER empleado_normalizar_correo
+BEFORE INSERT OR UPDATE OF correo ON empleado
+FOR EACH ROW
+EXECUTE FUNCTION normalizar_correo();</code></pre>
+                    <p>En un trigger BEFORE de fila, retornar NEW continúa la operación con la fila modificada; retornar OLD en UPDATE puede sustituir el resultado por la fila anterior; retornar NULL cancela esa fila sin abortar necesariamente las otras. En un trigger AFTER el valor de retorno se ignora. En INSTEAD OF se retorna la fila que representa la operación completada o NULL si no se procesó.</p>
+                    <p>Un trigger puede emitir DML que dispare otros triggers. Diseñe una cadena acíclica o controle la condición de reentrada; la recursión accidental puede causar resultados duplicados o exceder límites de ejecución. Los triggers se disparan en un orden determinado por el motor (en PostgreSQL, por nombre para triggers del mismo evento/momento), pero no conviene usar ese detalle como sustituto de una transacción de negocio explícita.</p>
+                </section>
+                <section id="funciones">
+                    <h3>Funciones, procedimientos y estructura de PL/pgSQL</h3>
+                    <p>Una función se crea con <code>CREATE FUNCTION nombre(parámetros) RETURNS tipo LANGUAGE plpgsql</code> y debe producir un resultado con <code>RETURN</code>, <code>RETURN NEXT</code> o <code>RETURN QUERY</code>, según su tipo. Puede invocarse como parte de una expresión SQL y no debe ejecutar control transaccional. Una función con efectos laterales no debe declararse falsamente <code>IMMUTABLE</code> o <code>STABLE</code>; esa volatilidad informa al optimizador sobre la posibilidad de cambios observables. <code>STRICT</code> indica que el motor no invoca la función si algún argumento es NULL.</p>
+                    <p>Un procedimiento se define con <code>CREATE PROCEDURE</code> y se invoca mediante <code>CALL</code>; no tiene valor de retorno como una función, aunque admite parámetros OUT/INOUT. En PostgreSQL puede controlar transacciones con COMMIT/ROLLBACK en contextos permitidos: no puede hacerlo si el CALL está dentro de un bloque de transacción explícito, ni desde cualquier cadena de invocación que no permita control transaccional.</p>
+                    <p>Un bloque PL/pgSQL tiene forma <code>[&lt;&lt;etiqueta&gt;&gt;] [DECLARE ...] BEGIN ... END</code>. Variables se declaran con tipo; asignaciones usan <code>:=</code>; control de flujo utiliza <code>IF/ELSIF/ELSE</code>, <code>CASE</code>, <code>LOOP</code>, <code>WHILE</code> y <code>FOR</code>. <code>SELECT ... INTO variable</code> asigna una fila; <code>INTO STRICT</code> exige exactamente una. Para DML, <code>RETURNING ... INTO</code> captura valores modificados. Si se requiere ejecutar SQL dinámico, use <code>EXECUTE</code> con <code>USING</code> para parametrizar valores y <code>format('%I', identificador)</code> para construir identificadores correctamente: los parámetros no reemplazan nombres de tabla o columna.</p>
+                    <pre><code>CREATE OR REPLACE FUNCTION salario_medio(p_departamento bigint)
+RETURNS numeric
+LANGUAGE plpgsql
+STABLE
+AS $$
+DECLARE
+    v_promedio numeric;
+BEGIN
+    SELECT AVG(salario)
+    INTO v_promedio
+    FROM empleado
+    WHERE departamento_id = p_departamento
+      AND activo;
+
+    RETURN v_promedio;
+END;
+$$;</code></pre>
+                    <p>La función devuelve NULL si el grupo no contiene salarios no nulos; no sustituye silenciosamente esa ausencia por cero. Para capturar errores, PL/pgSQL ofrece bloques <code>BEGIN ... EXCEPTION WHEN condición THEN ... END</code>. El bloque con EXCEPTION forma una subtransacción: las modificaciones realizadas dentro de él se revierten si ocurre la excepción, mientras el manejador puede registrar o traducir el error. No capture <code>WHEN OTHERS</code> para ignorar fallos; si se captura, vuelva a lanzar con <code>RAISE</code> cuando no exista una recuperación real.</p>
+                </section>
+                <section id="consideraciones">
+                    <h3>Atomicidad, rendimiento y criterios de diseño</h3>
+                    <p>Funciones, procedimientos llamados desde una transacción y triggers participan del contexto transaccional del cliente: COMMIT confirma tanto el cambio original como sus efectos; ROLLBACK los revierte juntos. Bloqueos tomados por sus sentencias permanecen hasta terminar la transacción. Un trigger por fila agrega trabajo aproximadamente proporcional al número de filas afectadas; un trigger de sentencia evita repetir inicialización, y el procesamiento set-based suele superar un bucle fila a fila.</p>
+                    <p>Use constraints para reglas locales; procedimientos para operaciones de negocio nombradas que coordinan varios pasos; funciones para cálculos o resultados invocables desde SQL; triggers para invariantes inevitables al escribir desde múltiples canales, auditoría transaccional o adaptación de vistas. Evite esconder llamadas remotas, lógica extensa o cambios no documentados en triggers. Documente el orden, permisos de ejecución y tablas modificadas.</p>
+                    <p>Considere el privilegio de ejecución: por defecto, una función puede ejecutarse con los permisos del invocador (<code>SECURITY INVOKER</code>). <code>SECURITY DEFINER</code> corre con los del propietario y requiere especial cuidado: fije un <code>search_path</code> seguro, califique objetos, limite EXECUTE y no permita que entradas controladas por usuarios alteren la resolución de nombres. Pruebe rollback, múltiples filas, ausencia de filas, errores, cascadas y concurrencia; una prueba en una sola sesión no detecta todas las carreras.</p>
+                </section>
                 <section class="video-block"><div class="section-kicker">BD2_03_Triggers_clase.mp4</div><h3>Lógica procedural y triggers</h3><iframe src="https://drive.google.com/file/d/1SZZKvceA7EiRYnD3yzCPD_4shqbjeEUG/preview" title="Video sobre lógica procedural y triggers" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><p><a href="https://drive.google.com/file/d/1SZZKvceA7EiRYnD3yzCPD_4shqbjeEUG/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p></section>
                 <section class="download-card">
                     <div class="section-kicker">Descarga</div>

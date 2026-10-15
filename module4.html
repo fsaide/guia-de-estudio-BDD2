@@ -64,11 +64,51 @@
             </div>
 
             <div class="module-content">
-                <section id="intro"><h3>Introducción</h3><p>Una vista es una tabla virtual definida por una consulta. Si bien presenta una apariencia de tabla, no contiene datos propios en el sentido físico; en realidad, cada acceso a la vista ejecuta la consulta subyacente sobre las tablas base.</p><p>La vista es un mecanismo de abstracción: oculta complejidad y ofrece una interfaz de acceso consistente que puede cambiar sin que los usuarios deban conocer los detalles del esquema interno.</p></section>
-                <section id="creacion"><h3>Creación y uso</h3><p>Se crea con CREATE VIEW, y puede renombrar columnas, encapsular joins complejos y limitar la información expuesta.</p><p>La cláusula WITH CHECK OPTION es esencial en vistas con filtrado: evita que una operación UPDATE o INSERT haga que una fila deje de cumplir la condición que la define. En otras palabras, preserva la pertenencia de la fila a la vista.</p></section>
-                <section id="actualizable"><h3>Vistas actualizables</h3><p>No todas las vistas son actualizables. Si el motor no puede mapear una operación DML sobre la vista a una operación inequívoca sobre las tablas base, la operación queda restringida. En PostgreSQL, una vista compleja con DISTINCT, GROUP BY, agregados o joins múltiples normalmente requiere una solución alternativa.</p><p>En esos casos, se usa un trigger INSTEAD OF para redirigir la operación a la lógica apropiada sobre la base física.</p></section>
-                <section id="materializada"><h3>Vistas materializadas</h3><p>Una vista materializada almacena el resultado calculado físicamente. Esto mejora el rendimiento en consultas repetitivas, pero exige un proceso de actualización y puede quedar desactualizada respecto a las tablas base. Es una herramienta de reporting y analítica, donde la latencia es aceptable y la velocidad de lectura importa más.</p></section>
-                <section id="ventajas"><h3>Ventajas</h3><ul><li>Protegen información sensible.</li><li>Ocultan complejidad de consultas.</li><li>Facilitan la reutilización de lógica.</li><li>Permiten mantener una capa de acceso estable.</li></ul></section>
+                <section id="intro">
+                    <h3>Modelo de vista y expansión de consultas</h3>
+                    <p>Una vista ordinaria es un objeto de catálogo cuyo cuerpo es una consulta almacenada. No mantiene una copia de las filas: al consultarla, el sistema combina su definición con la consulta externa y planifica la expresión resultante sobre las tablas base. Así, una vista ofrece un esquema lógico estable, permite reutilizar joins y expresiones, y separa las interfaces de lectura de la organización física.</p>
+                    <p>La vista no congela resultados ni crea por sí sola una frontera de rendimiento. Si su definición contiene joins o agregaciones costosos, cada consulta puede volver a pagar ese costo. Las vistas anidadas pueden ser expandidas por el optimizador, pero una definición compleja puede dificultar la estimación o inspección del plan.</p>
+                    <p>Por tanto, una vista común tiene el costo asintótico y de I/O de la consulta expandida, no O(1) por el hecho de estar nombrada. Una materializada cambia ese intercambio: el refresco debe leer y calcular el conjunto resultante (como mínimo proporcional a las filas examinadas y producidas), mientras que una lectura indexada puede localizar una clave en O(log n) y reduce trabajo repetido a costa de espacio y datos potencialmente atrasados.</p>
+                </section>
+                <section id="creacion">
+                    <h3>Definición, reemplazo, dependencias y control de filas</h3>
+                    <p>La forma básica es <code>CREATE [OR REPLACE] VIEW nombre [(columnas)] AS consulta [WITH [CASCADED|LOCAL] CHECK OPTION]</code>. Las columnas de salida deben tener nombres únicos y tipos determinables. <code>CREATE OR REPLACE VIEW</code> conserva el objeto existente y sus permisos, pero en PostgreSQL no permite cambiar arbitrariamente nombres, tipos u orden de columnas existentes; ciertos cambios requieren recrearla y gestionar dependencias. <code>DROP VIEW ... RESTRICT</code> falla si hay dependientes; <code>CASCADE</code> los elimina también y debe usarse de forma deliberada.</p>
+                    <pre><code>CREATE VIEW empleados_activos AS
+SELECT id, nombre, departamento_id
+FROM empleado
+WHERE activo
+WITH LOCAL CHECK OPTION;</code></pre>
+                    <p><code>WITH CHECK OPTION</code> impide insertar o actualizar, a través de esa vista, una fila que deje de satisfacer su condición de filtrado. LOCAL exige verificar la condición de la vista actual; CASCADED verifica también las condiciones de vistas subyacentes. Sin esta cláusula puede ser posible modificar una fila a través de la vista y que desaparezca de ella inmediatamente, aunque el cambio sea válido en la tabla.</p>
+                    <p>El privilegio <code>SELECT</code> sobre una vista puede exponer solo las columnas y filas proyectadas. Para que sea un límite de seguridad efectivo, el rol consumidor no debe conservar acceso directo a las tablas base. En PostgreSQL, tenga en cuenta el comportamiento de permisos del propietario de la vista y la opción <code>security_barrier</code> cuando expresiones no confiables puedan revelar datos por canales laterales mediante evaluación de predicados. Una vista no sustituye políticas RLS para aislamiento por fila cuando esas políticas son el mecanismo apropiado.</p>
+                </section>
+                <section id="actualizable">
+                    <h3>Actualización a través de vistas</h3>
+                    <p>Una vista es automáticamente actualizable si el motor puede mapear cada fila visible a una fila de una tabla base y cada columna escrita a una columna base. En PostgreSQL, las vistas simples sobre una sola relación suelen ser actualizables; expresiones calculadas, agregaciones, DISTINCT, GROUP BY, ventanas y combinaciones complejas limitan esa posibilidad. Las reglas exactas del motor deben verificarse para la definición concreta.</p>
+                    <p>Para una vista no actualizable, un trigger <code>INSTEAD OF</code> puede implementar INSERT, UPDATE o DELETE y traducir la operación a tablas base. El trigger debe definir claramente qué significa actualizar columnas derivadas, cómo manejar conflictos y qué fila devuelve. También puede usarse el sistema de rules, aunque los triggers suelen ofrecer un control procedural más explícito. Operaciones multi-tabla en vistas join pueden ser ambiguas; se debe elegir una tabla destino y conservar las restricciones de integridad.</p>
+                    <p>Las vistas actualizables no permiten eludir las constraints de las tablas: cualquier escritura traducida se valida normalmente al llegar a la base. Si la aplicación necesita escribir varias tablas en una unidad lógica, encapsule los pasos en una función/procedimiento transaccional o en un trigger claramente definido.</p>
+                </section>
+                <section id="materializada">
+                    <h3>Vistas materializadas, refresco y costo</h3>
+                    <p>Una vista materializada almacena físicamente el resultado de una consulta. <code>CREATE MATERIALIZED VIEW nombre AS consulta</code> puede calcular el contenido inicial; posteriormente <code>REFRESH MATERIALIZED VIEW nombre</code> vuelve a ejecutar la consulta y reemplaza los datos almacenados. No se actualiza automáticamente cuando cambia una tabla base, por lo que su frescura depende de la frecuencia y éxito del refresco.</p>
+                    <p>La consulta de lectura puede acceder a los datos materializados como a una relación, y se le pueden crear índices. El refresco tradicional puede bloquear lecturas durante parte del reemplazo. <code>REFRESH MATERIALIZED VIEW CONCURRENTLY</code> permite lecturas concurrentes, pero requiere un índice UNIQUE que cubra todas las filas y use solo columnas (sin predicado parcial ni expresión), además de que la vista ya esté poblada. No elimina el costo de recalcular el resultado y necesita más recursos temporales.</p>
+                    <pre><code>CREATE MATERIALIZED VIEW ventas_por_mes AS
+SELECT date_trunc('month', fecha) AS mes,
+       producto_id,
+       SUM(cantidad) AS unidades
+FROM venta
+GROUP BY date_trunc('month', fecha), producto_id;
+
+CREATE UNIQUE INDEX ventas_por_mes_clave
+    ON ventas_por_mes (mes, producto_id);
+
+REFRESH MATERIALIZED VIEW CONCURRENTLY ventas_por_mes;</code></pre>
+                    <p>El trade-off consiste en desplazar CPU/I/O a la tarea de refresco y aceptar obsolescencia controlada para acelerar lecturas repetidas. Evalúe la duración del refresco, ventana de frescura, uso de disco, concurrencia y necesidad de incrementos. PostgreSQL no proporciona mantenimiento incremental general nativo de materialized views.</p>
+                </section>
+                <section id="ventajas">
+                    <h3>Diseño pragmático y límites</h3>
+                    <p>Use vistas para presentar contratos de lectura coherentes, ocultar columnas, encapsular expresiones repetidas y reducir el acoplamiento al esquema interno. Otorgar acceso a una vista y no a la tabla permite mínimo privilegio, pero la seguridad depende de los permisos efectivos y de la configuración del propietario. Versione los cambios de definición junto con la aplicación y pruebe dependencias antes de reemplazar o borrar objetos.</p>
+                    <p>Use una vista ordinaria cuando los datos deben reflejar siempre el estado actual y el costo de consulta es aceptable; use una materializada cuando muchas lecturas repetidas justifican almacenamiento y una política de refresco; use una función o trigger INSTEAD OF cuando se necesite una interfaz de escritura no representable mediante actualización automática. No cree vistas solo para prometer velocidad: confirme el plan de ejecución y el costo real.</p>
+                </section>
                 <section class="video-block"><div class="section-kicker">BD2_04_Vistas_clase.mp4</div><h3>Clase sobre vistas</h3><iframe src="https://drive.google.com/file/d/1Wri5R4z5UBeV8cz0pIX_BcKBVpduPY5v/preview" title="Clase sobre vistas" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><p><a href="https://drive.google.com/file/d/1Wri5R4z5UBeV8cz0pIX_BcKBVpduPY5v/view" target="_blank" rel="noreferrer">Abrir video en Google Drive</a></p></section>
                 <section class="download-card">
                     <div class="section-kicker">Descarga</div>

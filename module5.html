@@ -63,10 +63,49 @@
             </div>
 
             <div class="module-content">
-                <section id="intro"><h3>Introducción</h3><p>La optimización de consultas es el proceso de seleccionar una estrategia eficiente para recuperar los datos requeridos. No se trata de “hacer SQL más corto”, sino de reducir el costo estimado de la ejecución, minimizando lecturas, joins innecesarios y ordenamientos costosos.</p><p>El optimizador del sistema genera un plan de ejecución a partir de la consulta, evalúa alternativas equivalentes y elige la que estima tiene menor costo. Para ello utiliza información estadística sobre cardinalidad, distribuciones y uso de índices.</p></section>
-<section id="heuristica"><h3>Heurística y costo</h3><p>La optimización heurística empuja restricciones y proyecciones hacia palabras tempranas del árbol de la consulta. La optimización por costo compara diferentes planes y calcula su costo estimado para elegir el mejor.</p><p>Cuando un plan no es el adecuado, el problema suele ser conceptual: una consulta muy amplia, un join mal ordenado o la falta de un índice adecuado. El EXPLAIN es la herramienta que permite observar esa decisión.</p></section>
-<section id="indices"><h3>Índices</h3><p>Un índice acelera la localización de filas, pero no es una solución automática: también implica mantenimiento y sobrecarga de escritura. Los índices B-tree son útiles para igualdad y rangos, mientras que índices parciales pueden ser aún más eficientes para subsets de una tabla.</p><p>La clave es diseñar con criterio y no crear índices por cada columna; el beneficio depende del patrón real de consulta y del volumen de datos.</p></section>
-<section id="explain"><h3>EXPLAIN</h3><p>El comando EXPLAIN, y más aún EXPLAIN ANALYZE, permite saber qué plan está ejecutando el motor, cómo está haciendo los scans y si los joins están aprovechando o no los índices existentes.</p><p>La lectura de un plan no debe ser superficial: se debe interpretar la cardinalidad, los costos relativos y la presencia de Sequential Scan vs Index Scan. Es la diferencia entre “la consulta anda” y “la consulta está bien diseñada”.</p></section>
+                <section id="intro">
+                    <h3>Arquitectura del optimizador y objetivo de costo</h3>
+                    <p>El motor transforma una consulta SQL en un árbol de operaciones relacionales y después en un plan físico ejecutable. El parser valida sintaxis y nombres; el rewriter incorpora vistas y reglas; el planificador genera alternativas; el optimizador compara sus costos estimados y el executor realiza el plan seleccionado. La consulta es declarativa: salvo restricciones de orden explícitas, el usuario no dicta la secuencia de scans ni el algoritmo de join.</p>
+                    <p>El costo total incluye principalmente I/O de páginas y CPU, y puede considerar memoria y comunicación según el sistema. PostgreSQL usa unidades de costo abstractas configuradas, no milisegundos: un costo estimado de 100 no significa una duración temporal fija. El planificador estima cuántas filas salen de cada nodo (cardinalidad), cuántas páginas se leen y si una operación puede ejecutarse en memoria o requiere trabajo temporal en disco.</p>
+                    <p>Una cardinalidad mal estimada se propaga: el optimizador puede escoger un orden de joins, método de acceso o algoritmo de join inadecuado. Las estadísticas de distribución, valores más frecuentes, histogramas y correlación entre columnas ayudan a estimar selectividad. <code>ANALYZE</code> recopila estadísticas; la opción <code>default_statistics_target</code> y estadísticas extendidas ayudan en distribuciones sesgadas o columnas correlacionadas. Las estadísticas no sustituyen conocer la carga real.</p>
+                </section>
+                <section id="heuristica">
+                    <h3>Transformaciones, joins y algoritmos de ejecución</h3>
+                    <p>La optimización algebraica aprovecha equivalencias. La selección puede empujarse cerca de la relación que filtra para reducir filas tempranamente; la proyección puede descartar columnas innecesarias; joins conmutativos/asociativos pueden reordenarse si se conserva la semántica. Los outer joins, LIMIT, agregados, funciones volátiles y operaciones sensibles al orden restringen transformaciones. Empujar una condición de WHERE a través de un outer join sin probar equivalencia puede cambiar el resultado.</p>
+                    <p>Un <em>nested loop join</em> recorre la relación externa y busca coincidencias en la interna para cada fila; con un índice en la clave interior funciona bien cuando la entrada externa es pequeña. Su costo ingenuo puede ser O(mn), aunque búsquedas indexadas lo reducen sustancialmente. Un <em>hash join</em> construye una tabla hash con una entrada y sondea la otra; suele ser eficiente para equijoins grandes, con costo esperado cercano a O(m+n), y necesita memoria proporcional a la tabla hash. Si no cabe, puede particionar y escribir a disco. Un <em>merge join</em> recorre ambas entradas ordenadas por clave; el recorrido es O(m+n), pero ordenar previamente puede costar O(n log n). El método elegido depende del volumen, orden e índices disponibles.</p>
+                    <p>Para leer filas, un <em>sequential scan</em> recorre páginas de una relación y suele ganar si se requiere una fracción grande de ella. Un <em>index scan</em> localiza claves en el índice y visita filas de la tabla; si hay muchas coincidencias dispersas puede causar I/O aleatorio. Un <em>bitmap index scan</em> combina TIDs de uno o varios índices y visita páginas de heap agrupadas, útil para selectividades intermedias. Ningún nodo es malo en abstracto: se compara su costo con las alternativas para ese volumen.</p>
+                </section>
+                <section id="indices">
+                    <h3>Índices: estructura, sintaxis y selección</h3>
+                    <p>Un índice es una estructura secundaria que asocia claves con ubicaciones de filas; acelera búsquedas selectivas, pero ocupa espacio y se mantiene en cada INSERT/UPDATE/DELETE. El árbol B (implementación B-tree en PostgreSQL) mantiene claves ordenadas y balanceadas, con búsqueda/actualización O(log n) y recorrido eficiente por rangos. Es apropiado para igualdad, desigualdad, ordenamientos y prefijos de clave compatibles con la collation. Hash sirve para igualdad; GIN indexa componentes de valores compuestos como arrays, JSONB y texto completo; GiST ofrece estructuras extensibles para datos espaciales/rangos; BRIN resume bloques físicos y es compacto cuando el orden de almacenamiento correlaciona con la clave. El operador admitido depende de la clase de operadores del índice.</p>
+                    <pre><code>CREATE INDEX empleado_depto_salario_idx
+    ON empleado (departamento_id, salario DESC);
+
+CREATE INDEX empleado_activo_correo_idx
+    ON empleado (correo)
+    WHERE activo;
+
+CREATE INDEX empleado_nombre_normalizado_idx
+    ON empleado (lower(nombre));
+
+CREATE INDEX venta_fecha_idx
+    ON venta (fecha)
+    INCLUDE (producto_id, cantidad);</code></pre>
+                    <p>En un B-tree compuesto, el orden de columnas importa: un índice <code>(a,b)</code> es más útil para condiciones que restringen el prefijo <code>a</code> y luego <code>b</code>, no equivale automáticamente a índices independientes de ambas columnas. Un índice parcial contiene únicamente filas que cumplen su predicado y reduce tamaño/costo cuando consultas frecuentes usan ese mismo predicado. Un índice de expresión sirve si la consulta aplica la misma expresión. <code>INCLUDE</code> almacena columnas de cobertura en las hojas sin que participen en el orden de búsqueda; puede permitir index-only scan si el mapa de visibilidad confirma que las páginas heap están visibles.</p>
+                    <p>La planificación considera costo de recorrer el índice más costo de obtener las filas. No indexe cada atributo por reflejo: cada estructura incrementa almacenamiento, caché ocupada, WAL, tiempo de escritura y mantenimiento de vacuum. Un índice duplicado o no usado puede empeorar la carga aunque nunca aparezca en el plan.</p>
+                </section>
+                <section id="explain">
+                    <h3>EXPLAIN, EXPLAIN ANALYZE y método de diagnóstico</h3>
+                    <p><code>EXPLAIN</code> muestra el plan y costos estimados sin ejecutar la consulta. <code>EXPLAIN ANALYZE</code> la ejecuta y agrega tiempos y filas observados; por eso puede ejecutar también funciones y efectos laterales de la sentencia. Para evaluar una escritura en un entorno controlado se puede envolver en una transacción y hacer ROLLBACK, teniendo presente que no todos los efectos externos se revierten. <code>BUFFERS</code> informa lecturas/accesos de bloques; <code>VERBOSE</code> detalla columnas y <code>FORMAT JSON</code> facilita análisis automatizado.</p>
+                    <pre><code>EXPLAIN (ANALYZE, BUFFERS, VERBOSE)
+SELECT id, salario
+FROM empleado
+WHERE departamento_id = 12
+  AND salario &gt;= 50000
+ORDER BY salario DESC;</code></pre>
+                    <p>Lea el árbol desde las hojas hacia la raíz. Cada nodo muestra método, costo inicial/final, filas estimadas y ancho de fila; ANALYZE agrega filas reales, tiempo y número de loops. En nodos repetidos, el tiempo/filas puede expresarse por loop y debe multiplicarse para entender el trabajo acumulado. Compare <code>rows</code> estimadas y reales: una diferencia grande orienta a estadísticas antiguas, sesgo o correlación no modelada. En un nodo paralelo, observe workers y tiempos agregados.</p>
+                    <p>En <code>BUFFERS</code>, shared hit indica páginas encontradas en caché compartida; read indica páginas traídas al shared buffer, aunque el sistema operativo también puede tenerlas en caché. Local/temp informa uso de estructuras temporales, como sorts o hashes que exceden <code>work_mem</code>. El costo del padre incluye nodos hijos, así que no sume indiscriminadamente todos los costos del árbol. Primero identifique la operación dominante y su causa; modifique estadísticas, forma de consulta o índice y vuelva a medir con datos representativos. No fuerce planes en producción como primer recurso: puede mejorar un caso y empeorar otros con distintas cardinalidades.</p>
+                </section>
                 
                 <section class="download-card">
                     <div class="section-kicker">Descarga</div>

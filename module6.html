@@ -66,39 +66,63 @@
             <div class="module-content">
                 <section id="intro">
                     <h3>Introducción</h3>
-                    <p>Las bases de datos relacionales resuelven muy bien la integridad, la estructura y las transacciones ACID, pero presentan límites cuando el problema exige alta escalabilidad horizontal, semiestructura flexible o procesamiento masivo de eventos. En ese contexto aparecen las bases NoSQL.</p>
-                    <p>La clase introduce NoSQL como una ampliación del panorama, no como una sustitución absoluta del modelo relacional. El criterio central es elegir el modelo según el patrón de acceso y la necesidad funcional, no por dogma.</p>
+                    <p>NoSQL agrupa familias de sistemas que priorizan modelos de datos y estrategias de distribución diferentes a la relación tabular tradicional. El término no significa necesariamente “sin SQL”, “sin esquema”, “sin transacciones” ni “sin consistencia”: cada producto define su lenguaje, garantías y límites. La selección se deriva del patrón de acceso, volumen, latencia, disponibilidad, forma de los datos y requisitos de consistencia.</p>
+                    <p>La organización distribuida permite añadir nodos para almacenar o procesar más carga, pero introduce particiones de red, replicación, reequilibrado y decisiones sobre lecturas desactualizadas. La flexibilidad de esquema reduce fricción cuando las estructuras evolucionan, aunque desplaza parte de la validación y normalización hacia la aplicación o las reglas del motor.</p>
                 </section>
 
                 <section id="por-que">
                     <h3>¿Por qué NoSQL?</h3>
-                    <p>Los sistemas modernos manejan volúmenes muy grandes de datos, velocidad de escritura relevante y variedad de formatos. Además, el servicio debe seguir disponible incluso ante fallas parciales del sistema o de la red.</p>
-                    <p>En ese escenario, NoSQL nace para atender escalabilidad y flexibilidad. La idea no es “romper” el modelo relacional, sino admitir alternativas cuando la estructura fija del esquema relacional resulta demasiado rígida o costosa para cierto tipo de aplicaciones.</p>
+                    <p>Una aplicación puede requerir escrituras distribuidas con partición horizontal, acceso de latencia baja por clave, documentos con estructura variable, recorridos intensivos de relaciones o retención masiva de eventos. Las familias NoSQL permiten adaptar el almacenamiento a esas cargas y escalar de forma horizontal mediante particiones (shards), réplicas o ambas.</p>
+                    <p>La decisión implica modelar primero las operaciones dominantes y sus garantías: qué consultas deben resolverse con baja latencia, qué datos se leen y escriben juntos, qué grado de duplicación se tolera, cuánto retraso de replicación es aceptable y qué sucede durante una partición. Un modelo puede hacer rápido un patrón y volver costosa una consulta no prevista. “Escala horizontal” no elimina coordinación: distribución, consistencia, particionado desigual y fallos operativos siguen teniendo costo.</p>
                 </section>
 
                 <section id="modelos">
                     <h3>Modelos de datos</h3>
-                    <p>Los cuatro modelos más relevantes de la clase son: documentos, clave-valor, columna ancha y grafos. Cada uno sirve mejor a distintos patrones de consulta y acceso.</p>
+                    <p>Los modelos principales organizan datos y relaciones de forma distinta; las etiquetas describen abstracciones, no una implementación idéntica entre productos.</p>
                     <ul>
-                        <li><strong>Documentos:</strong> adecuado cuando los datos se almacenan como estructuras JSON o similares y el acceso natural es por atributos dentro del documento.</li>
-                        <li><strong>Clave-valor:</strong> útil para almacenamiento simple y acceso directo por clave, con gran velocidad de lectura y escritura.</li>
-                        <li><strong>Columna ancha:</strong> pensado para consultas sobre un conjunto pequeño de atributos, especialmente en datasets muy grandes y distribuidos.</li>
-                        <li><strong>Grafos:</strong> ideal cuando la relación entre entidades es el centro del problema y las consultas recorren conexiones de forma intensiva.</li>
+                        <li><strong>Documentos:</strong> cada documento autocontenido contiene pares campo-valor, arrays y subdocumentos, con búsqueda por campos e índices según el motor. Favorece agregados que se leen y actualizan juntos; la denormalización evita joins frecuentes pero duplica valores y requiere estrategia de actualización.</li>
+                        <li><strong>Clave-valor:</strong> asocia una clave única con un valor opaco o parcialmente interpretable. Las operaciones fundamentales son GET/PUT/DELETE por clave, típicamente con costo esperado cercano a O(1) en tablas hash distribuidas. Consultar por atributos internos puede no estar soportado o ser secundario; se usa para caché, sesiones y estados accesibles por clave.</li>
+                        <li><strong>Columna ancha:</strong> almacena filas particionadas por clave, con familias/columnas dispersas que pueden variar entre filas. El diseño se hace desde consultas conocidas; la clave de partición distribuye carga y las columnas de clustering ordenan datos dentro de la partición. Consultas que no incluyen la partición pueden requerir fan-out costoso.</li>
+                        <li><strong>Grafos:</strong> modela vértices/nodos y aristas con propiedades y permite recorrer relaciones directamente. Es adecuado cuando vecindades y trayectorias son el centro de las consultas. El costo depende de profundidad, grado y distribución de los nodos; los hubs de alto grado pueden ser puntos calientes.</li>
                     </ul>
-                    <p>No existe un modelo “mejor” en general. Lo correcto es decidir en función de la forma en que se accede a los datos y del tipo de operación predominante.</p>
+                    <p>El esquema sigue existiendo aun cuando no se impone como DDL rígido: es el conjunto de campos, tipos, invariantes e interpretaciones que productores y consumidores esperan. La validación puede imponerse en servidor, aplicación o ambos, y debe versionarse.</p>
                 </section>
 
                 <section id="cap">
-                    <h3>CAP y consistencia</h3>
-                    <p>El teorema CAP expresa que, ante una partición de red, un sistema distribuido solo puede privilegiar dos de estas tres propiedades: consistencia, disponibilidad y tolerancia a particiones. En la práctica, esto fuerza decisiones de diseño.</p>
-                    <p>Por otra parte, ACID y BASE representan dos formas distintas de pensar la consistencia: mientras ACID prioriza rigor transaccional, BASE prioriza disponibilidad y tolerancia a fallas. La clase usa estas ideas para explicar por qué no todas las bases se comportan igual ante particiones o retrasos de sincronización.</p>
+                    <h3>CAP, replicación y garantías de consistencia</h3>
+                    <p>CAP trata tres propiedades de un servicio distribuido: Consistency en el sentido de consistencia linealizable de cada operación (una lectura observa el último valor confirmado antes de ella), Availability en el sentido de que toda solicitud a un nodo no fallido recibe una respuesta válida, y Partition tolerance, que el sistema continúa operando ante pérdida o demora arbitraria de mensajes entre grupos de nodos. Cuando ocurre una partición, no se pueden garantizar simultáneamente las respuestas siempre disponibles y la linealizabilidad: un diseño puede rechazar/bloquear ciertas operaciones para preservar consistencia o responder desde cada partición aceptando divergencias que luego debe reconciliar. P no es una opción eliminable en una red distribuida; C/A describen el comportamiento elegido bajo partición.</p>
+                    <p>La replicación mantiene copias en nodos distintos para tolerancia a fallos y escalabilidad de lectura. En replicación síncrona, la confirmación espera a que réplicas definidas acepten el cambio, añadiendo latencia pero fortaleciendo durabilidad/consistencia según el protocolo. En replicación asíncrona, el primario puede confirmar antes de que las réplicas apliquen la operación; una lectura secundaria puede estar atrasada y un failover puede perder cambios aún no replicados si la política lo permite.</p>
+                    <p>Consistencia eventual significa que, si dejan de ocurrir escrituras y la comunicación se recupera, las réplicas convergen; no promete que cada lectura intermedia vea el último dato. Consistencia causal preserva orden causal; lectura-your-writes garantiza que un cliente vea sus propios cambios; consistencia fuerte/linealizable ofrece una promesa más exigente y costosa de coordinar. Especifique garantías por operación y cliente, no por etiqueta general del producto.</p>
+                    <p>ACID describe propiedades transaccionales: Atomicidad (todo o nada), Consistencia (se conservan invariantes), Aislamiento (control de interferencia) y Durabilidad (lo confirmado sobrevive a fallos según el contrato). BASE —Basically Available, Soft state, Eventual consistency— es una caracterización de sistemas que priorizan disponibilidad y convergencia, no un teorema ni una garantía universal de todas las bases NoSQL. Las familias NoSQL modernas pueden ofrecer transacciones ACID, y una aplicación relacional distribuida también debe tratar fallas y disponibilidad.</p>
                 </section>
 
                 <section id="mongodb">
                     <h3>MongoDB y la base documental</h3>
-                    <p>MongoDB es el caso más representativo de una base documental. En lugar de depender exclusivamente de tablas y relaciones, guarda documentos con estructuras similares a JSON. Esto permite representar jerarquías, listas, subdocumentos y datos semi-estructurados sin requerir un esquema rígido previo.</p>
-                    <p>En el modelo documental, la decisión entre embeber o referenciar es clave. Embeber suele ser útil cuando se quiere acceder a la información de un objeto en la misma operación y la estructura es naturalmente dependiente. Referenciar es útil cuando hay información compartida o cuando se quiere evitar duplicación y mantener consistencia en las relaciones. </p>
-                    <p>En MongoDB también se trabaja con agregaciones, filtros, proyecciones, índices y planes de ejecución. En ese sentido, la comparación con el optimizador relacional sigue siendo válida: no solo importa la sintaxis, sino también cómo se consulta y qué estructura se usa detrás.</p>
+                    <p>MongoDB organiza documentos BSON en colecciones. BSON conserva tipos como ObjectId, fecha, decimal y binario que no son idénticos a los tipos de JSON textual. Un documento tiene un identificador <code>_id</code> único; la estructura puede variar, pero un validador de colección puede imponer un esquema JSON Schema y reglas de tipo/rango. Las operaciones de escritura de un solo documento son atómicas; las transacciones multi-documento existen, con costo de coordinación, y se usan cuando el diseño no puede mantener la invariancia dentro de un documento.</p>
+                    <p>Embeber conviene para subentidades que se leen y actualizan juntas, con cardinalidad acotada y una relación de propiedad clara. Referenciar conviene para relaciones muchos-a-muchos, entidades compartidas, crecimiento ilimitado de arrays o documentos que se consultan/modifican independientemente. La duplicación acelera lecturas pero crea consistencia de copias: se debe decidir si se actualizan todas en la misma transacción, mediante eventos/reconciliación o aceptando un retraso explícito. Un array que crece sin límite puede aumentar documento, índice y costo de escritura; usar una colección separada o bucketizar eventos puede evitar ese problema.</p>
+                    <pre><code>// Documento de pedido con líneas embebidas
+{
+  _id: ObjectId("65f1a3b2c4d5e6f789012345"),
+  clienteId: ObjectId("65f1a3b2c4d5e6f789012346"),
+  creadoEn: ISODate("2026-10-15T12:00:00Z"),
+  estado: "pendiente",
+  lineas: [
+    { productoId: ObjectId("65f1a3b2c4d5e6f789012347"), cantidad: 2, precioUnitario: Decimal128("14.50") }
+  ]
+}</code></pre>
+                    <p>La API de consultas combina filtros, proyecciones, orden y límites. La agregación se expresa como pipeline: cada etapa recibe documentos y emite otros documentos. <code>$match</code> filtra, <code>$project</code> transforma campos, <code>$unwind</code> expande arrays, <code>$group</code> agrega y <code>$sort</code> ordena. Colocar filtros pronto reduce documentos intermedios; el optimizador puede mover etapas seguras, pero el orden y semántica de etapas como unwind/limit importan.</p>
+                    <pre><code>db.pedidos.aggregate([
+  { $match: { estado: "entregado", creadoEn: { $gte: ISODate("2026-01-01") } } },
+  { $unwind: "$lineas" },
+  { $group: {
+      _id: "$lineas.productoId",
+      unidades: { $sum: "$lineas.cantidad" },
+      importe: { $sum: { $multiply: ["$lineas.cantidad", "$lineas.precioUnitario"] } }
+  } },
+  { $sort: { importe: -1 } }
+]);</code></pre>
+                    <p>Los índices MongoDB pueden ser de una o varias claves, multikey para arrays, texto, geoespaciales, TTL y parciales/esparsos según necesidad. En un índice compuesto importa el prefijo; el índice multikey puede producir claves por elemento y tiene restricciones específicas para arrays. Cada índice agrega espacio y costo de escritura. <code>explain("executionStats")</code> permite comparar claves y documentos examinados con resultados devueltos; una gran diferencia puede indicar baja selectividad o índice inadecuado.</p>
+                    <p>En un clúster sharded, la shard key determina cómo distribuir documentos y enrutar consultas. Una clave de alta cardinalidad, distribución uniforme y que aparezca en consultas dirigidas suele evitar hotspots y scatter-gather, aunque no existe una clave perfecta para todas las cargas. Cambiar la estrategia de particionado y reequilibrar puede mover muchos datos; debe diseñarse con el acceso esperado y límites de crecimiento. Una replica set replica un conjunto de datos para alta disponibilidad, pero no es lo mismo que sharding: la primera copia datos; el segundo los divide entre shards.</p>
                 </section>
 
                 <section class="video-block">

@@ -66,32 +66,68 @@
             <div class="module-content">
                 <section id="intro">
                     <h3>Introducción</h3>
-                    <p>La seguridad en una base de datos no es un agregado opcional ni una capa superficial. Determina qué usuarios y roles pueden acceder a cada objeto, bajo qué condiciones, y qué tipo de operaciones pueden ejecutar. La política de seguridad debe seguir el principio de menor privilegio: cada usuario recibe únicamente el acceso necesario para cumplir su función.</p>
-                    <p>La administración de permisos es central para proteger la confidencialidad, la integridad y la disponibilidad de la información. Si los privilegios se conceden de forma indiscriminada, la base de datos queda expuesta a accesos no autorizados, manipulación accidental o pérdida de control administrativo.</p>
+                    <p>El control de acceso determina qué principal autenticado puede realizar qué operación sobre qué objeto. La autenticación verifica la identidad; la autorización decide las acciones permitidas. El motor combina privilegios de roles, permisos de objetos, atributos y políticas de fila para controlar conexiones, esquemas, tablas, secuencias, funciones y otros objetos.</p>
+                    <p>El principio de menor privilegio concede solo las capacidades indispensables, durante el tiempo necesario y a través de roles específicos. Separe identidades humanas, roles de aplicación y cuentas administrativas; evite compartir superusuarios; audite quién puede conceder privilegios y quién puede ejecutar código con permisos elevados. La seguridad debe proteger confidencialidad, integridad y disponibilidad, y debe comprobarse con la identidad real que usará la aplicación.</p>
                 </section>
 
                 <section id="privilegios">
                     <h3>Privilegios y roles</h3>
-                    <p>Se distinguen permisos sobre objetos y permisos sobre operaciones. Por ejemplo, un usuario puede tener derecho a consultar una tabla, insertar filas, modificar determinadas columnas o eliminar registros. Cuando se administran muchos usuarios con funciones similares, es conveniente agrupar esos permisos mediante roles.</p>
-                    <p>Un rol permite centralizar la política de acceso y simplificar la gestión. En lugar de asignar permisos directamente a cada persona, el administrador crea roles con funciones específicas y luego les asigna esos roles a los usuarios correspondientes.</p>
+                    <p>En PostgreSQL, un rol puede iniciar sesión si tiene atributo <code>LOGIN</code>; los roles sin LOGIN se usan habitualmente como grupos de privilegios. Las membresías conectan roles y permiten heredar privilegios según las opciones de membresía y la configuración. El rol activo puede cambiar mediante <code>SET ROLE</code>. El propietario de un objeto posee capacidades que no se reducen a un GRANT común, por lo que conviene separar un propietario sin LOGIN del usuario de aplicación.</p>
+                    <p>Los privilegios incluyen <code>CONNECT</code> sobre base de datos; <code>USAGE</code> sobre esquema (permite resolver nombres, no acceder por sí solo a las tablas); <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>, <code>TRUNCATE</code>, <code>REFERENCES</code> y <code>TRIGGER</code> sobre tablas; permisos por columna para ciertos privilegios; y <code>USAGE</code>/<code>SELECT</code>/<code>UPDATE</code> sobre secuencias. Crear un esquema o tabla requiere capacidades distintas a consultarlos. El rol especial <code>PUBLIC</code> representa todos los roles; una concesión a PUBLIC debe tratarse como amplia.</p>
+                    <p>Este patrón separa el propietario de los roles de lectura y escritura; los nombres deben adaptarse al despliegue:</p>
+                    <pre><code>CREATE ROLE datos_owner NOLOGIN;
+CREATE ROLE app_lectura NOLOGIN;
+CREATE ROLE app_escritura NOLOGIN;
+CREATE ROLE app_login LOGIN;
+
+GRANT app_lectura, app_escritura TO app_login;
+GRANT CONNECT ON DATABASE tienda TO app_login;
+GRANT USAGE ON SCHEMA public TO app_lectura, app_escritura;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO app_lectura;
+GRANT SELECT, INSERT, UPDATE, DELETE
+    ON ALL TABLES IN SCHEMA public TO app_escritura;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO app_escritura;</code></pre>
+                    <p>Las concesiones sobre objetos existentes no cubren automáticamente los futuros: configure privilegios por defecto para el rol que los crea y el esquema. Revise privilegios efectivos con <code>\dp</code>/<code>\du</code> en psql o los catálogos y pruebe con una sesión del rol consumidor, no solo como administrador.</p>
                 </section>
 
                 <section id="grant">
                     <h3>GRANT y REVOKE</h3>
                     <p>La asignación de permisos se realiza con <code>GRANT</code>, mientras que la retirada se hace con <code>REVOKE</code>. La sintaxis formal del estándar SQL define qué objeto recibe el permiso, qué privilegio se otorga y si el usuario beneficiario puede a su vez conceder ese privilegio a terceros.</p>
-                    <p>La cláusula <code>WITH GRANT OPTION</code> es importante porque modifica la capacidad de delegación: el receptor del privilegio puede posteriormente concederlo a otros usuarios. Esa funcionalidad debe analizarse con cuidado porque puede producir cascadas de permisos difíciles de gestionar y auditar.</p>
+                    <p><code>GRANT privilegios ON objeto TO rol [WITH GRANT OPTION]</code> crea una concesión. La opción permite que el receptor delegue ese privilegio; no transfiere la propiedad del objeto. En PostgreSQL, la retirada usa <code>REVOKE [GRANT OPTION FOR] privilegios ON objeto FROM rol [CASCADE|RESTRICT]</code>. <code>CASCADE</code> también revoca concesiones que dependían de la retirada; <code>RESTRICT</code> falla si existen concesiones dependientes.</p>
+                    <pre><code>GRANT SELECT ON TABLE public.pedido TO app_lectura;
+GRANT UPDATE (estado) ON TABLE public.pedido TO app_escritura;
+REVOKE ALL ON TABLE public.pedido FROM PUBLIC;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE datos_owner IN SCHEMA public
+    GRANT SELECT ON TABLES TO app_lectura;</code></pre>
+                    <p>La concesión por columna limita qué atributos se pueden modificar, pero no sustituye políticas de fila ni evita que otros privilegios habiliten una ruta indirecta. Las secuencias y tablas tienen ACL independientes; con columnas identity/serial puede requerirse permiso sobre la secuencia. <code>ALTER DEFAULT PRIVILEGES</code> se aplica a objetos futuros creados por el rol indicado, no modifica los existentes ni establece una regla universal para objetos creados por otros propietarios.</p>
                 </section>
 
                 <section id="vistas">
                     <h3>Seguridad mediante vistas</h3>
-                    <p>Las vistas son una herramienta muy útil para restringir el acceso directo a tablas completas. Se puede crear una vista que muestre solo columnas relevantes o filas autorizadas y conceder permisos sobre esa vista en lugar de sobre la tabla base. Esto ayuda a encapsular el esquema interno y evitar que un usuario vea información sensible o no requerida.</p>
-                    <p>Cuando la lógica de negocio exige ocultar información confidencial, una vista puede ser la capa adecuada de seguridad. La idea es que el usuario interactúe con los datos que necesita y no con la estructura completa del sistema.</p>
+                    <p>Una vista puede proyectar columnas no confidenciales y filtrar filas autorizadas; se concede acceso a ella y se revoca el acceso directo a la tabla base. En PostgreSQL, las vistas ordinarias comprueban por defecto el acceso a relaciones subyacentes usando los permisos del propietario de la vista. Las versiones que admiten la opción <code>security_invoker</code> pueden comprobar permisos y RLS como el invocador. <code>security_barrier</code> restringe reordenamientos de predicados que podrían filtrar información mediante funciones no confiables, a costa de limitar optimizaciones.</p>
+                    <p>Para control por fila, PostgreSQL ofrece Row-Level Security (RLS): <code>ALTER TABLE ... ENABLE ROW LEVEL SECURITY</code> activa políticas y <code>CREATE POLICY</code> especifica qué filas pueden leerse o modificarse mediante <code>USING</code> y <code>WITH CHECK</code>. Cuando RLS está habilitada y no hay política aplicable, el acceso normal se deniega. Los propietarios omiten RLS salvo que se use <code>FORCE ROW LEVEL SECURITY</code>; superusuarios y roles BYPASSRLS también la eluden. No conecte la aplicación como propietario o superusuario si depende de RLS para separar usuarios.</p>
+                    <p>Una política añade la evaluación de sus predicados a las operaciones sobre filas y puede aumentar CPU, especialmente en scans amplios o con funciones costosas. Mantenga simples las expresiones, evite consultas correlacionadas repetidas y cree índices en las claves usadas por filtros selectivos cuando el plan pueda aprovecharlos; una política no transforma por sí sola una consulta O(n) en acceso selectivo.</p>
+                    <pre><code>ALTER TABLE pedido ENABLE ROW LEVEL SECURITY;
+CREATE POLICY pedido_por_cliente
+    ON pedido
+    FOR SELECT
+    USING (cliente_id = current_setting('app.cliente_id', true)::bigint);</code></pre>
+                    <p>El ejemplo solo es seguro si el valor del contexto de sesión no puede ser falsificado por el usuario final. Un parámetro de configuración personalizado no prueba por sí mismo la identidad. Diseñe el origen del contexto, el pool de conexiones y la política contra suplantación. Pruebe SELECT, INSERT, UPDATE y DELETE por separado: USING filtra las filas a las que aplica una operación; WITH CHECK valida las filas resultantes.</p>
                 </section>
 
                 <section id="inyeccion">
                     <h3>Inyección SQL</h3>
-                    <p>La seguridad de acceso no se agota en permisos del sistema. La inyección SQL aparece cuando una aplicación concatena cadenas ingresadas por el usuario dentro de una sentencia SQL sin validación ni parametrización adecuada. El atacante puede manipular la consulta e intentar leer, modificar o borrar datos.</p>
-                    <p>La prevención es clara: usar consultas parametrizadas, validar entradas, no confiar en información externa y diseñar la base como un entorno accesible solo a través de mecanismos controlados. La seguridad del diseño debe contemplar tanto la autorización del usuario como la protección del código de acceso a datos.</p>
+                    <p>La inyección ocurre cuando datos externos se concatenan como parte de la sintaxis de una sentencia. La defensa principal es usar consultas parametrizadas para que el motor trate esos valores como datos, no como operadores o fragmentos SQL. La validación de dominio, autorización por objeto/fila y mínimo privilegio complementan la parametrización; escapar caracteres manualmente no es una defensa general.</p>
+                    <pre><code>-- La aplicación prepara esta consulta y envía el valor por separado.
+PREPARE pedidos_cliente(bigint) AS
+    SELECT id, creado_en, estado
+    FROM pedido
+    WHERE cliente_id = $1;
+
+EXECUTE pedidos_cliente(42);</code></pre>
+                    <p>Los parámetros representan valores, no identificadores ni palabras clave. Para elegir dinámicamente una columna o dirección de orden, use una lista permitida en la aplicación y construya identificadores con el mecanismo seguro del driver, manteniendo los valores parametrizados. Los procedimientos almacenados también pueden ser vulnerables si construyen SQL dinámico por concatenación.</p>
+                    <p>Use cuentas distintas por servicio, limite permisos de lectura/escritura, proteja credenciales y conexiones, audite cambios de roles/privilegios y registre actividad relevante sin almacenar secretos ni datos sensibles innecesarios. Aplique parches y proteja las copias de seguridad. Una consulta parametrizada no autoriza automáticamente a ver todas las filas: autenticación, autorización y validación son controles distintos.</p>
                 </section>
 
                 <section class="video-block">
