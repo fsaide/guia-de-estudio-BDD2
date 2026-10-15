@@ -456,6 +456,23 @@ body.module-page summary:focus-visible {
   padding: clamp(20px, 3vw, 38px);
 }
 
+.module-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.module-pagination-next {
+  margin-left: auto;
+}
+
+.module-pagination .btn {
+  max-width: 100%;
+  text-align: center;
+}
+
 .page-header {
   justify-content: flex-start;
   min-width: 0;

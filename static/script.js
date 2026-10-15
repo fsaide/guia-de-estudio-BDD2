@@ -60,6 +60,35 @@
         moduleIndex.appendChild(moduleIndexList);
         moduleSidebar.appendChild(moduleIndex);
 
+        const currentModuleIndex = moduleNames.findIndex(
+            (module) => module.href === activeModuleLink.getAttribute('href')
+        );
+        const modulePagination = document.createElement('nav');
+        modulePagination.className = 'module-pagination';
+        modulePagination.setAttribute('aria-label', 'Navegación entre módulos');
+
+        if (currentModuleIndex > 0) {
+            const previousModule = moduleNames[currentModuleIndex - 1];
+            const previousLink = document.createElement('a');
+            previousLink.className = 'btn btn-secondary module-pagination-previous';
+            previousLink.href = previousModule.href;
+            previousLink.textContent = `← Anterior: ${previousModule.label}`;
+            modulePagination.appendChild(previousLink);
+        }
+
+        if (currentModuleIndex >= 0 && currentModuleIndex < moduleNames.length - 1) {
+            const nextModule = moduleNames[currentModuleIndex + 1];
+            const nextLink = document.createElement('a');
+            nextLink.className = 'btn module-pagination-next';
+            nextLink.href = nextModule.href;
+            nextLink.textContent = `Siguiente: ${nextModule.label} →`;
+            modulePagination.appendChild(nextLink);
+        }
+
+        if (modulePagination.childElementCount > 0) {
+            moduleMain.querySelector('.module-content').insertAdjacentElement('afterend', modulePagination);
+        }
+
         const sectionNav = moduleSidebar.querySelector('.module-toc');
         if (sectionNav) {
             const sectionIndex = document.createElement('details');
